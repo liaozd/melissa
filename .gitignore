@@ -3,6 +3,9 @@ input/
 
 .idea/
 
+# sqlite.db
+*.db
+
 ### VirtualEnv template
 # Virtualenv
 # http://iamzed.com/2009/05/07/a-primer-on-virtualenv/
@@ -30,7 +33,6 @@ __pycache__/
 *.so
 
 # Distribution / packaging
-.Python
 env/
 build/
 develop-eggs/
