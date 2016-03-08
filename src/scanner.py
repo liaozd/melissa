@@ -36,7 +36,7 @@ class Scanner(object):
                        '(ID      INTEGER  PRIMARY KEY AUTOINCREMENT,'
                        'CAM_ID   CHAR(100)            NOT NULL,'
                        'TC       CHAR(11)             NOT NULL,'
-                       'DURATION int                  NOT NULL,'
+                       'DURATION INT                  NOT NULL,'
                        'FULLPATH CHAR(300)            NOT NULL);')
         self.conn.commit()
         print "Create Database"
@@ -61,7 +61,7 @@ class Scanner(object):
                         fullpath = os.path.join(path, file)
                         data = read_meta(fullpath)
                         if data:
-                            frames = float(data['duration'])/\
+                            frames = float(data['duration']) / \
                                      eval(data['codec_time_base'])
                             self.insert_record(cam_id=camera_id_folder,
                                                tc=data['timecode'],
@@ -69,7 +69,9 @@ class Scanner(object):
                                                fullpath=fullpath)
                             print "Insert clip: {}".format(fullpath)
                         else:
-                            print "{} is not recognizable.".format(fullpath)
+                            print "Warning!, {} is not recognizable.". \
+                                format(fullpath)
+
 
 if __name__ == '__main__':
     scanner = Scanner()
