@@ -61,15 +61,14 @@ class Scanner(object):
                         fullpath = os.path.join(path, file)
                         data = read_meta(fullpath)
                         if data:
-                            frames = float(data['duration']) / \
-                                     eval(data['codec_time_base'])
+                            frames = int(float(data['duration']) / eval(data['codec_time_base']))
                             self.insert_record(cam_id=camera_id_folder,
                                                tc=data['timecode'],
                                                duration=frames,
                                                fullpath=fullpath)
-                            print "Insert clip: {}".format(fullpath)
+                            print 'Insert clip: {0}'.format(fullpath)
                         else:
-                            print "Warning!, {} is not recognizable.". \
+                            print "Warning!, {0} is not recognizable.".\
                                 format(fullpath)
 
 
