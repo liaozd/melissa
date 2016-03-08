@@ -1,11 +1,30 @@
 #!/usr/bin/env python
+from __future__ import division
 
+import json
 import os
 import re
 import sqlite3
+import subprocess
 
 REG_CAM_ID = '^\d{4}_[a-zA-Z0-9]+_\w+_\d{3}$'
-TRACK_FILES = ['mov']
+CLIP_FILTER = ['.mov']
+
+
+def read_meta(clips):
+    try:
+        cmd = ['ffprobe', '-v', 'quiet', '-print_format', 'json',
+               '-show_format', '-show_streams', clips]
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE)
+        data = json.loads(proc.communicate()[0])
+        data_needed = {'timecode': data['streams'][0]['tags']['timecode'],
+                       'duration': data['streams'][0]['duration'],
+                       'codec_time_base': data['streams'][0]['codec_time_base']
+                       }
+        return data_needed
+    except Exception:
+        return None
 
 
 class Scanner(object):
@@ -15,18 +34,18 @@ class Scanner(object):
         self.c = self.conn.cursor()
         self.c.execute('CREATE   TABLE IF NOT EXISTS  TRACKS'
                        '(ID      INTEGER  PRIMARY KEY AUTOINCREMENT,'
-                       'CAM_ID   TEXT                 NOT NULL,'
-                       'IP       TEXT                 NOT NULL,'
-                       'OP       TEXT                 NOT NULL,'
-                       'FULLPATH CHAR(150)            NOT NULL);')
+                       'CAM_ID   CHAR(100)            NOT NULL,'
+                       'TC       CHAR(11)             NOT NULL,'
+                       'DURATION int                  NOT NULL,'
+                       'FULLPATH CHAR(300)            NOT NULL);')
         self.conn.commit()
         print "Create Database"
 
-    def insert_record(self, cam_id, ip, op, fullpath):
-        sql = ('INSERT INTO TRACKS (CAM_ID,IP,OP,FULLPATH) '
-               'VALUES ("{CAM_ID}","{IP}","{OP}","{FULLPATH}");'.
+    def insert_record(self, cam_id, tc, duration, fullpath):
+        sql = ('INSERT INTO TRACKS (CAM_ID,TC,DURATION,FULLPATH) '
+               'VALUES ("{CAM_ID}","{TC}","{DURATION}","{FULLPATH}");'.
                format(CAM_ID=cam_id,
-                      IP=ip, OP=op,
+                      TC=tc, DURATION=duration,
                       FULLPATH=fullpath))
         self.c.execute(sql)
 
@@ -34,11 +53,23 @@ class Scanner(object):
              path='/git-repos/melissa/input/160303/ep01/01_video/20160301'):
         for path, subdirs, files in os.walk(path):
             if re.search(REG_CAM_ID, os.path.basename(path)):
-                camera_path = os.path.basename(path)
-                self.insert_record(cam_id=camera_path,
-                                   ip='12', op='23',
-                                   fullpath=camera_path)
-
+                camera_id_folder = os.path.basename(path)
+                for file in files:
+                    extension = os.path.splitext(file)[1]
+                    if not file.startswith('.') and \
+                                    extension.lower() in CLIP_FILTER:
+                        fullpath = os.path.join(path, file)
+                        data = read_meta(fullpath)
+                        if data:
+                            frames = float(data['duration'])/\
+                                     eval(data['codec_time_base'])
+                            self.insert_record(cam_id=camera_id_folder,
+                                               tc=data['timecode'],
+                                               duration=frames,
+                                               fullpath=fullpath)
+                            print "Insert clip: {}".format(fullpath)
+                        else:
+                            print "{} is not recognizable.".format(fullpath)
 
 if __name__ == '__main__':
     scanner = Scanner()
