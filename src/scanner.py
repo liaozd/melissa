@@ -54,7 +54,6 @@ class Scanner(object):
                        'ALLMETA  TEXT                 NOT NULL,'
                        'FULLPATH CHAR(300)            NOT NULL);')
         self.conn.commit()
-        print "Create Database"
 
     def insert_record(self, cam_id, tc, duration, allmeta, fullpath):
         sql = ('INSERT INTO TRACKS (CAM_ID,TC,DURATION,ALLMETA,FULLPATH) '
