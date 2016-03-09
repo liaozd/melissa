@@ -7,11 +7,13 @@ import re
 import sqlite3
 import subprocess
 
+from config import DB_FILE, FRAMERATE, CLIP_FILTER
+
 REG_CAM_ID = '^\d{4}_[a-zA-Z0-9]+_\w+_\d{3}$'
-CLIP_FILTER = ['.mov']
-FRAMERATE = 25
+
+
 '''
-ffmpeg change timecode:
+COMMAND: ffmpeg change timecode
 ffmpeg -i [SourcePath] -vcodec copy -acodec copy -timecode 1:23:45:01 [DestPath]
 '''
 
@@ -37,11 +39,11 @@ def read_clip_meta(clips):
 
 
 class Scanner(object):
+
     def __init__(self):
-        db_file = 'test.db'
-        print 'Initial clip database: {0}'.format(db_file)
-        self.db = db_file
-        self.conn = sqlite3.connect(db_file)
+        print 'Initial clip database: {0}'.format(DB_FILE)
+        self.db = DB_FILE
+        self.conn = sqlite3.connect(DB_FILE)
         self.c = self.conn.cursor()
         self.c.execute('DROP TABLE IF EXISTS TRACKS;')
         self.c.execute('CREATE   TABLE    TRACKS'
