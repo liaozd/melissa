@@ -9,10 +9,19 @@ import subprocess
 
 REG_CAM_ID = '^\d{4}_[a-zA-Z0-9]+_\w+_\d{3}$'
 CLIP_FILTER = ['.mov']
+FRAMERATE = 25
+'''
+ffmpeg change timecode:
+ffmpeg -i [SourcePath] -vcodec copy -acodec copy -timecode 1:23:45:01 [DestPath]
+'''
 
 
-def read_meta(clips):
+def read_clip_meta(clips):
     try:
+        '''
+        Use command get clip meta:
+        ffprobe -print_format json -show_format -show_streams [SourcePath]
+        '''
         cmd = ['ffprobe', '-v', 'quiet', '-print_format', 'json',
                '-show_format', '-show_streams', clips]
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
@@ -20,7 +29,7 @@ def read_meta(clips):
         data = json.loads(proc.communicate()[0])
         data_needed = {'timecode': data['streams'][0]['tags']['timecode'],
                        'duration': data['streams'][0]['duration'],
-                       'codec_time_base': data['streams'][0]['codec_time_base']
+                       'all_meta': data,
                        }
         return data_needed
     except Exception:
@@ -29,23 +38,28 @@ def read_meta(clips):
 
 class Scanner(object):
     def __init__(self):
-        self.db = 'test.db'
-        self.conn = sqlite3.connect('test.db')
+        db_file = 'test.db'
+        print 'Initial clip database: {0}'.format(db_file)
+        self.db = db_file
+        self.conn = sqlite3.connect(db_file)
         self.c = self.conn.cursor()
-        self.c.execute('CREATE   TABLE IF NOT EXISTS  TRACKS'
+        self.c.execute('DROP TABLE IF EXISTS TRACKS;')
+        self.c.execute('CREATE   TABLE    TRACKS'
                        '(ID      INTEGER  PRIMARY KEY AUTOINCREMENT,'
                        'CAM_ID   CHAR(100)            NOT NULL,'
                        'TC       CHAR(11)             NOT NULL,'
                        'DURATION INT                  NOT NULL,'
+                       'ALLMETA  TEXT                 NOT NULL,'
                        'FULLPATH CHAR(300)            NOT NULL);')
         self.conn.commit()
         print "Create Database"
 
-    def insert_record(self, cam_id, tc, duration, fullpath):
-        sql = ('INSERT INTO TRACKS (CAM_ID,TC,DURATION,FULLPATH) '
-               'VALUES ("{CAM_ID}","{TC}","{DURATION}","{FULLPATH}");'.
+    def insert_record(self, cam_id, tc, duration, allmeta, fullpath):
+        sql = ('INSERT INTO TRACKS (CAM_ID,TC,DURATION,ALLMETA,FULLPATH) '
+               'VALUES '
+               '("{CAM_ID}","{TC}","{DURATION}","{ALLMETA}","{FULLPATH}");'.
                format(CAM_ID=cam_id,
-                      TC=tc, DURATION=duration,
+                      TC=tc, DURATION=duration, ALLMETA=allmeta,
                       FULLPATH=fullpath))
         self.c.execute(sql)
 
@@ -59,12 +73,14 @@ class Scanner(object):
                     if not file.startswith('.') and \
                                     extension.lower() in CLIP_FILTER:
                         fullpath = os.path.join(path, file)
-                        data = read_meta(fullpath)
+                        data = read_clip_meta(fullpath)
+                        print data
                         if data:
-                            frames = int(float(data['duration']) / eval(data['codec_time_base']))
+                            frames = int(float(data['duration']) * FRAMERATE)
                             self.insert_record(cam_id=camera_id_folder,
                                                tc=data['timecode'],
                                                duration=frames,
+                                               allmeta=data,
                                                fullpath=fullpath)
                             print 'Insert clip: {0}'.format(fullpath)
                         else:
