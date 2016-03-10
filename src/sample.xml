@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE xmeml>
 <xmeml version="5">
-<sequence id="序列 1 ">
+<sequence id="Sequence ID">
 	<uuid>6D99CD91-2C04-432F-B1A9-7DC4FA26D6E0</uuid>
 	<updatebehavior>add</updatebehavior>
 	<name>序列 1</name>

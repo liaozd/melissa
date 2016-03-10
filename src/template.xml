@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE xmeml>
+<xmeml version="5">
+<sequence id="Sequence ID">
+	<uuid>[place holder]</uuid>
+	<updatebehavior>add</updatebehavior>
+	<name>Melissa DIT Tool XML Template</name>
+	<duration>[place holder]</duration>
+	<rate>
+		<ntsc>FALSE</ntsc>
+		<timebase>25</timebase>
+	</rate>
+	<timecode>
+		<rate>
+			<ntsc>FALSE</ntsc>
+			<timebase>25</timebase>
+		</rate>
+		<string>01:00:00:00</string>
+		<frame>90000</frame>
+		<source>source</source>
+		<displayformat>NDF</displayformat>
+	</timecode>
+	<in>-1</in>
+	<out>-1</out>
+	<media>
+		<video>
+			<format>
+				<samplecharacteristics>
+					<width>1920</width>
+					<height>1080</height>
+					<anamorphic>FALSE</anamorphic>
+					<pixelaspectratio>Square</pixelaspectratio>
+					<fielddominance>none</fielddominance>
+					<rate>
+						<ntsc>FALSE</ntsc>
+						<timebase>25</timebase>
+					</rate>
+					<colordepth>24</colordepth>
+					<codec>
+						<name>Apple ProRes 422</name>
+						<appspecificdata>
+							<appname>Final Cut Pro</appname>
+							<appmanufacturer>Apple Inc.</appmanufacturer>
+							<appversion>7.0</appversion>
+							<data>
+								<qtcodec>
+									<codecname>Apple ProRes 422</codecname>
+									<codectypename>Apple ProRes 422</codectypename>
+									<codectypecode>apcn</codectypecode>
+									<codecvendorcode>appl</codecvendorcode>
+									<spatialquality>1024</spatialquality>
+									<temporalquality>0</temporalquality>
+									<keyframerate>0</keyframerate>
+									<datarate>0</datarate>
+								</qtcodec>
+							</data>
+						</appspecificdata>
+					</codec>
+				</samplecharacteristics>
+				<appspecificdata>
+					<appname>Melissa</appname>
+					<appmanufacturer>liao_zd@hotmail.com</appmanufacturer>
+					<appversion>0.1</appversion>
+					<data>
+						<fcpimageprocessing>
+							<useyuv>TRUE</useyuv>
+							<usesuperwhite>FALSE</usesuperwhite>
+							<rendermode>Float10BPP</rendermode>
+						</fcpimageprocessing>
+					</data>
+				</appspecificdata>
+			</format>
+		</video>
+	</media>
+	<ismasterclip>FALSE</ismasterclip>
+</sequence>
+</xmeml>
