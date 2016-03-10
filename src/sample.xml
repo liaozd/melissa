@@ -4,7 +4,7 @@
 <sequence id="Sequence ID">
 	<uuid>6D99CD91-2C04-432F-B1A9-7DC4FA26D6E0</uuid>
 	<updatebehavior>add</updatebehavior>
-	<name>序列 1</name>
+	<name>Sequence Name</name>
 	<duration>1018</duration>
 	<rate>
 		<ntsc>FALSE</ntsc>
@@ -86,16 +86,6 @@
 					<anamorphic>FALSE</anamorphic>
 					<alphatype>none</alphatype>
 					<masterclipid>0301_280_a_d02_cam20264_01 1</masterclipid>
-					<logginginfo>
-						<scene/>
-						<shottake/>
-						<lognote/>
-						<good>FALSE</good>
-					</logginginfo>
-					<labels>
-						<label2/>
-					</labels>
-
 					<file id="0301_280_a_d02_cam20264_01 2">
 						<name>0301_280_a_d02_cam20264_01.mov</name>
 						<pathurl>file://localhost/git-repos/melissa/input/160303/ep01/01_video/20160301/280/0301_280_a_003/0301_280_a_d02_cam20264_01.mov</pathurl>
@@ -126,9 +116,6 @@
 						<mediatype>video</mediatype>
 					</sourcetrack>
 					<fielddominance>none</fielddominance>
-					<itemhistory>
-						<uuid>EF6361D7-BA6D-404B-81E2-DC9BAFCC384E</uuid>
-					</itemhistory>
 				</clipitem>
 				<clipitem id="0301_280_a03_cam20264_01 ">
 					<name>0301_280_a03_cam20264_01</name>
@@ -146,16 +133,6 @@
 					<anamorphic>FALSE</anamorphic>
 					<alphatype>none</alphatype>
 					<masterclipid>0301_280_a03_cam20264_01 1</masterclipid>
-					<logginginfo>
-						<scene/>
-						<shottake/>
-						<lognote/>
-						<good>FALSE</good>
-					</logginginfo>
-					<labels>
-						<label2/>
-					</labels>
-
 					<file id="0301_280_a03_cam20264_01 2">
 						<name>0301_280_a03_cam20264_01.mov</name>
 						<pathurl>file://localhost/git-repos/melissa/input/160303/ep01/01_video/20160301/280/0301_280_a_004/0301_280_a03_cam20264_01.mov</pathurl>
@@ -186,9 +163,6 @@
 						<mediatype>video</mediatype>
 					</sourcetrack>
 					<fielddominance>none</fielddominance>
-					<itemhistory>
-						<uuid>DA170A12-B244-4689-86C2-272D4B208EC1</uuid>
-					</itemhistory>
 				</clipitem>
 				<clipitem id="0301_280_a02_cam20264_02 ">
 					<name>0301_280_a02_cam20264_02</name>
@@ -205,16 +179,6 @@
 					<anamorphic>FALSE</anamorphic>
 					<alphatype>none</alphatype>
 					<masterclipid>0301_280_a02_cam20264_02 1</masterclipid>
-					<logginginfo>
-						<scene/>
-						<shottake/>
-						<lognote/>
-						<good>FALSE</good>
-					</logginginfo>
-					<labels>
-						<label2/>
-					</labels>
-
 					<file id="0301_280_a02_cam20264_02 2">
 						<name>0301_280_a02_cam20264_02.mov</name>
 						<pathurl>file://localhost/git-repos/melissa/input/160303/ep01/01_video/20160301/280/0301_280_c_001/0301_280_a02_cam20264_02.mov</pathurl>
@@ -245,9 +209,6 @@
 						<mediatype>video</mediatype>
 					</sourcetrack>
 					<fielddominance>none</fielddominance>
-					<itemhistory>
-						<uuid>2CD8BCFF-7D9A-4C2F-98B3-E452948C347C</uuid>
-					</itemhistory>
 				</clipitem>
 				<enabled>TRUE</enabled>
 				<locked>FALSE</locked>
@@ -268,16 +229,6 @@
 					<anamorphic>FALSE</anamorphic>
 					<alphatype>none</alphatype>
 					<masterclipid>0301_580_a_d_2_cam20123_02 1</masterclipid>
-					<logginginfo>
-						<scene/>
-						<shottake/>
-						<lognote/>
-						<good>FALSE</good>
-					</logginginfo>
-					<labels>
-						<label2/>
-					</labels>
-
 					<file id="0301_580_a_d_2_cam20123_02 2">
 						<name>0301_580_a_d_2_cam20123_02.mov</name>
 						<pathurl>file://localhost/git-repos/melissa/input/160303/ep01/01_video/20160301/580/0301_580_a_001/0301_580_a_d_2_cam20123_02.mov</pathurl>
@@ -308,9 +259,6 @@
 						<mediatype>video</mediatype>
 					</sourcetrack>
 					<fielddominance>none</fielddominance>
-					<itemhistory>
-						<uuid>9828087B-CA92-4C07-A8C8-42F19C662C0C</uuid>
-					</itemhistory>
 				</clipitem>
 				<enabled>TRUE</enabled>
 				<locked>FALSE</locked>
