@@ -88,7 +88,7 @@
 					<masterclipid>0301_280_a_d02_cam20264_01 1</masterclipid>
 					<file id="0301_280_a_d02_cam20264_01 2">
 						<name>0301_280_a_d02_cam20264_01.mov</name>
-						<pathurl>file://localhost/git-repos/melissa/input/160303/ep01/01_video/20160301/280/0301_280_a_003/0301_280_a_d02_cam20264_01.mov</pathurl>
+						<pathurl>file://localhost/git-repos/melissa/input/160303/ep01/01_video/20160301/280/0301_280_a_03/0301_280_a_d02_cam20264_01.mov</pathurl>
 						<rate>
 							<timebase>25</timebase>
 						</rate>
@@ -117,6 +117,7 @@
 					</sourcetrack>
 					<fielddominance>none</fielddominance>
 				</clipitem>
+
 				<clipitem id="0301_280_a03_cam20264_01 ">
 					<name>0301_280_a03_cam20264_01</name>
 					<duration>349</duration>
@@ -135,7 +136,7 @@
 					<masterclipid>0301_280_a03_cam20264_01 1</masterclipid>
 					<file id="0301_280_a03_cam20264_01 2">
 						<name>0301_280_a03_cam20264_01.mov</name>
-						<pathurl>file://localhost/git-repos/melissa/input/160303/ep01/01_video/20160301/280/0301_280_a_004/0301_280_a03_cam20264_01.mov</pathurl>
+						<pathurl>file://localhost/git-repos/melissa/input/160303/ep01/01_video/20160301/280/0301_280_a_04/0301_280_a03_cam20264_01.mov</pathurl>
 						<rate>
 							<timebase>25</timebase>
 						</rate>
@@ -181,7 +182,7 @@
 					<masterclipid>0301_280_a02_cam20264_02 1</masterclipid>
 					<file id="0301_280_a02_cam20264_02 2">
 						<name>0301_280_a02_cam20264_02.mov</name>
-						<pathurl>file://localhost/git-repos/melissa/input/160303/ep01/01_video/20160301/280/0301_280_c_001/0301_280_a02_cam20264_02.mov</pathurl>
+						<pathurl>file://localhost/git-repos/melissa/input/160303/ep01/01_video/20160301/280/0301_280_c_01/0301_280_a02_cam20264_02.mov</pathurl>
 						<rate>
 							<timebase>25</timebase>
 						</rate>
