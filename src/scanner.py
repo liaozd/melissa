@@ -20,10 +20,10 @@ ffmpeg -i [SourcePath] -vcodec copy -acodec copy -timecode 1:23:45:01 [DestPath]
 
 def read_clip_meta(clips):
     try:
-        '''
+        """
         Use command get clip meta:
         ffprobe -print_format json -show_format -show_streams [SourcePath]
-        '''
+        """
         cmd = ['ffprobe', '-v', 'quiet', '-print_format', 'json',
                '-show_format', '-show_streams', clips]
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
@@ -75,7 +75,6 @@ class Scanner(object):
                                     extension.lower() in CLIP_FILTER:
                         fullpath = os.path.join(path, file)
                         data = read_clip_meta(fullpath)
-                        print data
                         if data:
                             frames = int(float(data['duration']) * FRAMERATE)
                             self.insert_record(cam_id=camera_id_folder,

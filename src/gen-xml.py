@@ -9,7 +9,6 @@ from config import DB_FILE
 
 
 class FcpXML(object):
-
     def __init__(self, xml_output='output.xml', xml_template='template.xml'):
         print 'Read database: {0}'.format(DB_FILE)
         self.db = DB_FILE
@@ -46,67 +45,72 @@ class FcpXML(object):
             <locked>FALSE</locked>
         </track>
         """
+        track = ET.SubElement(self.video_node, 'track')
+        # self.video_node.append(ET.Element("child2"))
+        # self.video_node.append(ET.Element('track'))
         clips = self.c.execute('SELECT cam_id, tc, duration, fullpath '
                                'FROM tracks WHERE cam_id=?;', cam_id)
+        ET.SubElement(track, 'clipitem')
         for clip in clips:
             print clip
 
-    def insert_clip(self):
-        clip_sample_xml = \
-        """
-        <clipitem id="0301_280_a_d02_cam20264_01 ">
-            <name>0301_280_a_d02_cam20264_01</name>
-            <duration>293</duration>
+    def insert_clipitem(self):
+        # root = ET.fromstring("<fruits><fruit>banana</fruit><fruit>apple</fruit></fruits>""")
+        clip_sample_xml = """
+<clipitem id="0301_280_a_d02_cam20264_01 ">
+    <name>0301_280_a_d02_cam20264_01</name>
+    <duration>293</duration>
+    <rate>
+        <ntsc>FALSE</ntsc>
+        <timebase>25</timebase>
+    </rate>
+    <in>0</in>
+    <out>293</out>
+    <start>0</start>
+    <end>293</end>
+    <pixelaspectratio>Square</pixelaspectratio>
+    <anamorphic>FALSE</anamorphic>
+    <alphatype>none</alphatype>
+    <masterclipid>0301_280_a_d02_cam20264_01 1</masterclipid>
+    <file id="0301_280_a_d02_cam20264_01 2">
+        <name>0301_280_a_d02_cam20264_01.mov</name>
+        <pathurl>file://localhost/git-repos/melissa/input/160303/ep01/01_video/20160301/280/0301_280_a_003/0301_280_a_d02_cam20264_01.mov</pathurl>
+        <rate>
+            <timebase>25</timebase>
+        </rate>
+        <duration>293</duration>
+        <timecode>
             <rate>
-                <ntsc>FALSE</ntsc>
                 <timebase>25</timebase>
             </rate>
-            <in>0</in>
-            <out>293</out>
-            <start>0</start>
-            <end>293</end>
-            <pixelaspectratio>Square</pixelaspectratio>
-            <anamorphic>FALSE</anamorphic>
-            <alphatype>none</alphatype>
-            <masterclipid>0301_280_a_d02_cam20264_01 1</masterclipid>
-            <file id="0301_280_a_d02_cam20264_01 2">
-                <name>0301_280_a_d02_cam20264_01.mov</name>
-                <pathurl>file://localhost/git-repos/melissa/input/160303/ep01/01_video/20160301/280/0301_280_a_003/0301_280_a_d02_cam20264_01.mov</pathurl>
-                <rate>
-                    <timebase>25</timebase>
-                </rate>
+            <string>14:19:55:00</string>
+            <frame>1289875</frame>
+            <displayformat>NDF</displayformat>
+            <source>source</source>
+        </timecode>
+        <media>
+            <video>
                 <duration>293</duration>
-                <timecode>
-                    <rate>
-                        <timebase>25</timebase>
-                    </rate>
-                    <string>14:19:55:00</string>
-                    <frame>1289875</frame>
-                    <displayformat>NDF</displayformat>
-                    <source>source</source>
-                </timecode>
-                <media>
-                    <video>
-                        <duration>293</duration>
-                        <samplecharacteristics>
-                            <width>1920</width>
-                            <height>1080</height>
-                        </samplecharacteristics>
-                    </video>
-                </media>
-            </file>
-            <sourcetrack>
-                <mediatype>video</mediatype>
-            </sourcetrack>
-            <fielddominance>none</fielddominance>
-        </clipitem>
-        """
+                <samplecharacteristics>
+                    <width>1920</width>
+                    <height>1080</height>
+                </samplecharacteristics>
+            </video>
+        </media>
+    </file>
+    <sourcetrack>
+        <mediatype>video</mediatype>
+    </sourcetrack>
+    <fielddominance>none</fielddominance>
+</clipitem>"""
         self.video_node.append(ET.Element("child1"))
 
     def create_xml(self):
         tracks = self.get_tracks()
         for track in tracks:
             self.insert_track(track)
+        print ET.tostring(self.base_tree, pretty_print=True)
+
 
 if __name__ == '__main__':
     fcpxml = FcpXML()
