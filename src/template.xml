@@ -58,9 +58,9 @@
 					</codec>
 				</samplecharacteristics>
 				<appspecificdata>
-					<appname>Melissa</appname>
-					<appmanufacturer>liao_zd@hotmail.com</appmanufacturer>
-					<appversion>0.1</appversion>
+					<appname>Final Cut Pro</appname>
+					<appmanufacturer>Apple Inc.</appmanufacturer>
+					<appversion>7.0</appversion>
 					<data>
 						<fcpimageprocessing>
 							<useyuv>TRUE</useyuv>
