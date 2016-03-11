@@ -9,7 +9,7 @@ import subprocess
 
 from config import DB_FILE, FRAMERATE, CLIP_FILTER
 
-REG_CAM_ID = '^\d{4}_[a-zA-Z0-9]+_\w+_\d{3}$'
+REG_CAM_ID = '^\d{4}_[a-zA-Z0-9]+_\w+_\d{2}$'
 
 
 '''
