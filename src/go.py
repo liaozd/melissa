@@ -17,14 +17,11 @@ def main(argv):
         Usage()
         sys.exit(2)
     try:
-        print argv
         path = argv[1]
         scanner = Scanner()
         scanner.scan(path)
-
         fcpxml = FcpXML()
         fcpxml.create_xml()
-
     except getopt.GetoptError, err:
         print str(err)
         Usage()
