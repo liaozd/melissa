@@ -1,11 +1,22 @@
 #!/usr/bin/env python
-
+import os
 import sqlite3
 import uuid
 
+from timecode import Timecode
+
 from lxml import etree as ET
 
-from config import DB_FILE
+from config import DB_FILE, FRAMERATE, CLIP_SAMPLE_XML
+
+parser = ET.XMLParser(remove_blank_text=True)
+
+
+def dict_factory(cursor, row):
+    dict = {}
+    for idx, col in enumerate(cursor.description):
+        dict[col[0]] = row[idx]
+    return dict
 
 
 class FcpXML(object):
@@ -15,13 +26,29 @@ class FcpXML(object):
         self.conn = sqlite3.connect(DB_FILE)
         self.c = self.conn.cursor()
         self.xml_output = xml_output
-        self.base_tree = ET.parse(xml_template)
+        # The `parser` will allow the parser to drop blank text nodes when
+        # constructing the tree. If you now call a serialization function to
+        # pretty print this tree, lxml can add fresh whitespace to the XML
+        # tree to indent it.
+        self.base_tree = ET.parse(xml_template, parser)
         self.sequence = self.base_tree.find('sequence')
         self.video_node = self.sequence.find('media').find('video')
+        self.timeline_first = self.c.execute(
+            'SELECT fir_f FROM tracks ORDER BY fir_f LIMIT 1;').fetchone()[0]
+        self.timeline_last = self.c.execute(
+            'SELECT last_f FROM tracks ORDER BY last_f DESC LIMIT 1;').\
+            fetchone()[0]
         self.update_xml_header()
 
     def update_xml_header(self):
+        duration = self.timeline_last - self.timeline_first
+        string, frame = self.c.execute(
+            'SELECT tc, fir_f FROM tracks ORDER BY fir_f LIMIT 1;').fetchone()
         self.sequence.find('uuid').text = str(uuid.uuid1())
+        self.sequence.find('duration').text = str(duration)
+        timecode_node = self.sequence.find('timecode')
+        timecode_node.find('string').text = string
+        timecode_node.find('frame').text = str(frame)
         # TODO update duration from by db info
 
     def get_tracks(self):
@@ -46,70 +73,83 @@ class FcpXML(object):
         </track>
         """
         track = ET.SubElement(self.video_node, 'track')
-        # self.video_node.append(ET.Element("child2"))
-        # self.video_node.append(ET.Element('track'))
-        clips = self.c.execute('SELECT cam_id, tc, duration, fullpath '
-                               'FROM tracks WHERE cam_id=?;', cam_id)
-        ET.SubElement(track, 'clipitem')
-        for clip in clips:
-            print clip
 
-    def insert_clipitem(self):
-        # root = ET.fromstring("<fruits><fruit>banana</fruit><fruit>apple</fruit></fruits>""")
-        clip_sample_xml = """
-<clipitem id="0301_280_a_d02_cam20264_01 ">
-    <name>0301_280_a_d02_cam20264_01</name>
-    <duration>293</duration>
-    <rate>
-        <ntsc>FALSE</ntsc>
-        <timebase>25</timebase>
-    </rate>
-    <in>0</in>
-    <out>293</out>
-    <start>0</start>
-    <end>293</end>
-    <pixelaspectratio>Square</pixelaspectratio>
-    <anamorphic>FALSE</anamorphic>
-    <alphatype>none</alphatype>
-    <masterclipid>0301_280_a_d02_cam20264_01 1</masterclipid>
-    <file id="0301_280_a_d02_cam20264_01 2">
-        <name>0301_280_a_d02_cam20264_01.mov</name>
-        <pathurl>file://localhost/git-repos/melissa/input/160303/ep01/01_video/20160301/280/0301_280_a_003/0301_280_a_d02_cam20264_01.mov</pathurl>
-        <rate>
-            <timebase>25</timebase>
-        </rate>
-        <duration>293</duration>
-        <timecode>
-            <rate>
-                <timebase>25</timebase>
-            </rate>
-            <string>14:19:55:00</string>
-            <frame>1289875</frame>
-            <displayformat>NDF</displayformat>
-            <source>source</source>
-        </timecode>
-        <media>
-            <video>
-                <duration>293</duration>
-                <samplecharacteristics>
-                    <width>1920</width>
-                    <height>1080</height>
-                </samplecharacteristics>
-            </video>
-        </media>
-    </file>
-    <sourcetrack>
-        <mediatype>video</mediatype>
-    </sourcetrack>
-    <fielddominance>none</fielddominance>
-</clipitem>"""
-        self.video_node.append(ET.Element("child1"))
+        first_tc = self.c.execute(
+            'SELECT tc FROM tracks WHERE cam_id=? ORDER BY tc LIMIT 1;',
+            cam_id).fetchone()[0]
+        last_tc = self.c.execute(
+            'SELECT tc FROM tracks WHERE cam_id=? ORDER BY tc DESC LIMIT 1;',
+            cam_id).fetchone()[0]
+        last_clip_duration = self.c.execute(
+            'SELECT duration FROM tracks WHERE cam_id=? ORDER BY tc DESC LIMIT 1;',
+            cam_id).fetchone()[0]
+
+        track_begin = Timecode(FRAMERATE, first_tc).frames
+        track_end = Timecode(FRAMERATE, last_tc).frames + last_clip_duration
+
+        clips = self.c.execute('SELECT id, cam_id, tc, duration, fullpath '
+                               'FROM tracks WHERE cam_id=? ORDER BY tc;',
+                               cam_id)
+        # TODO use dict to store sql data
+
+        for clip in clips:
+            data = dict()
+            data['id'] = clip[0]
+            data['cam_id'] = clip[1]
+            data['tc'] = clip[2]
+            data['duration'] = clip[3]
+            data['path'] = clip[4]
+            self.insert_clipitem(track, data,  track_begin, track_end)
+
+        node_enabled = ET.Element('enabled')
+        node_enabled.text = 'TRUE'
+        node_locked = ET.Element('locked')
+        node_locked.text = 'FALSE'
+        track.append(node_enabled)
+        track.append(node_locked)
+
+    def insert_clipitem(self, track, data, track_begin, track_end):
+        id = data['id']
+        filename = os.path.basename(data['path'])
+        name = os.path.splitext(filename)[0]
+        duration = data['duration']
+        frame = Timecode(str(FRAMERATE), data['tc']).frames
+        start = frame - track_begin
+        end = start + duration
+        masterclipid = name + ' ' + str(id)
+        # fixme(maybe problem here)
+        pathurl = 'file://localhost' + data['path']
+
+        clipitem = ET.fromstring(CLIP_SAMPLE_XML, parser)
+        clipitem.find('name').text = name
+        clipitem.find('duration').text = str(duration)
+        clipitem.find('out').text = str(duration)
+        clipitem.find('start').text = str(start)
+        clipitem.find('end').text = str(end)
+        clipitem.find('masterclipid').text = masterclipid
+
+        clipitem_file = clipitem.find('file')
+        clipitem_file.attrib['id'] = name + ' 2'
+        clipitem_file.find('name').text = filename
+        clipitem_file.find('pathurl').text = pathurl
+        clipitem_file.find('duration').text = str(duration)
+
+        file_timcode = clipitem_file.find('timecode')
+        file_timcode.find('string').text = data['tc']
+        file_timcode.find('frame').text = str(frame-1)
+
+        file_media = clipitem_file.find('media')
+        media_video = file_media.find('video')
+        media_video.find('duration').text = str(duration)
+        track.append(clipitem)
 
     def create_xml(self):
         tracks = self.get_tracks()
         for track in tracks:
             self.insert_track(track)
-        print ET.tostring(self.base_tree, pretty_print=True)
+        output = 'output.xml'
+        self.base_tree.write(output, pretty_print=True, xml_declaration=True,
+                             encoding='UTF-8')
 
 
 if __name__ == '__main__':
