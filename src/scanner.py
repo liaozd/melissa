@@ -7,9 +7,11 @@ import re
 import sqlite3
 import subprocess
 
+from timecode import Timecode
+
 from config import DB_FILE, FRAMERATE, CLIP_FILTER
 
-REG_CAM_ID = '^\d{4}_[a-zA-Z0-9]+_\w+_\d{2}$'
+REG_CAM_ID = '^\d{4}_[a-zA-Z0-9_]+_\w+_\d{2}$'
 
 
 '''
@@ -45,23 +47,41 @@ class Scanner(object):
         self.db = DB_FILE
         self.conn = sqlite3.connect(DB_FILE)
         self.c = self.conn.cursor()
+        self.build_db()
+
+    def build_db(self):
         self.c.execute('DROP TABLE IF EXISTS TRACKS;')
+        """
+        CAM_ID:
+        TC: timecode in the metadata
+        DURATION: duration in the metadata
+        FIR_F: first frame calculated by timecode, map to fcp xml <start>
+        LAST_F: last frame calculated by `first frame` + `duration`, map to
+                fcp xml <end>
+        ALLMETA: all metadata
+        FULLPATH: file full path on disk
+        """
         self.c.execute('CREATE   TABLE    TRACKS'
                        '(ID      INTEGER  PRIMARY KEY AUTOINCREMENT,'
                        'CAM_ID   CHAR(100)            NOT NULL,'
                        'TC       CHAR(11)             NOT NULL,'
                        'DURATION INT                  NOT NULL,'
+                       'FIR_F    INT                  NOT NULL,'
+                       'LAST_F   INT                  NOT NULL,'
                        'ALLMETA  TEXT                 NOT NULL,'
                        'FULLPATH CHAR(300)            NOT NULL);')
         self.conn.commit()
 
+    # TODO use dict pass parameters
     def insert_record(self, cam_id, tc, duration, allmeta, fullpath):
-        sql = ('INSERT INTO TRACKS (CAM_ID,TC,DURATION,ALLMETA,FULLPATH) '
-               'VALUES '
-               '("{CAM_ID}","{TC}","{DURATION}","{ALLMETA}","{FULLPATH}");'.
-               format(CAM_ID=cam_id,
-                      TC=tc, DURATION=duration, ALLMETA=allmeta,
-                      FULLPATH=fullpath))
+        fir_f = Timecode(FRAMERATE, tc).frames
+        last_f = fir_f + duration
+        sql = ('INSERT INTO TRACKS '
+               '(CAM_ID,TC,DURATION,FIR_F,LAST_F,ALLMETA,FULLPATH) VALUES '
+               '("{CAM_ID}","{TC}","{DURATION}","{FIR_F}","{LAST_F}",'
+               '"{ALLMETA}","{FULLPATH}");'.
+               format(CAM_ID=cam_id, TC=tc, DURATION=duration, FIR_F=fir_f,
+                      LAST_F=last_f, ALLMETA=allmeta, FULLPATH=fullpath))
         self.c.execute(sql)
 
     def scan(self,
