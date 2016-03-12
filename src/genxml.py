@@ -87,19 +87,6 @@ class FcpXML(object):
         """
         track = ET.SubElement(self.video_node, 'track')
 
-        # first_tc = self.c.execute(
-        #     'SELECT tc FROM tracks WHERE cam_id=? ORDER BY tc LIMIT 1;',
-        #     cam_id).fetchone()[0]
-        # last_tc = self.c.execute(
-        #     'SELECT tc FROM tracks WHERE cam_id=? ORDER BY tc DESC LIMIT 1;',
-        #     cam_id).fetchone()[0]
-        # last_clip_duration = self.c.execute(
-        #     'SELECT duration FROM tracks WHERE cam_id=? ORDER BY tc DESC LIMIT 1;',
-        #     cam_id).fetchone()[0]
-        #
-        # track_begin = Timecode(FRAMERATE, first_tc).frames
-        # track_end = Timecode(FRAMERATE, last_tc).frames + last_clip_duration
-
         clips = self.c.execute(
             'SELECT id, cam_id, tc, duration, fir_f, last_f, fullpath FROM '
             'tracks WHERE cam_id=? ORDER BY fir_f;',
