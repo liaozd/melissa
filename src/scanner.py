@@ -84,8 +84,7 @@ class Scanner(object):
                       LAST_F=last_f, ALLMETA=allmeta, FULLPATH=fullpath))
         self.c.execute(sql)
 
-    def scan(self,
-             path='/git-repos/melissa/input/160303/ep01/01_video/20160301'):
+    def scan(self, path):
         for path, subdirs, files in os.walk(path):
             if re.search(REG_CAM_ID, os.path.basename(path)):
                 camera_id_folder = os.path.basename(path)
@@ -106,9 +105,9 @@ class Scanner(object):
                         else:
                             print "Warning!, {0} is not recognizable.".\
                                 format(fullpath)
-
+        self.conn.commit()
 
 if __name__ == '__main__':
+    path = '/git-repos/melissa/input/160303/ep01/01_video/20160301'
     scanner = Scanner()
-    scanner.scan()
-    scanner.conn.commit()
+    scanner.scan(path)
