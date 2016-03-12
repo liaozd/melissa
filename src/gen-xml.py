@@ -19,6 +19,17 @@ def dict_factory(cursor, row):
     return dict
 
 
+def get_columns(c, table='tracks'):
+    """ Returns columns of the table in list
+    """
+    c.execute('PRAGMA TABLE_INFO({})'.format(table))
+    info = c.fetchall()
+    columns = []
+    for col in info:
+        columns.append(col[1])
+    return columns
+
+
 class FcpXML(object):
     def __init__(self, xml_output='output.xml', xml_template='template.xml'):
         print 'Read database: {0}'.format(DB_FILE)
@@ -38,6 +49,7 @@ class FcpXML(object):
         self.timeline_last = self.c.execute(
             'SELECT last_f FROM tracks ORDER BY last_f DESC LIMIT 1;').\
             fetchone()[0]
+        self.columns = get_columns(self.c)
         self.update_xml_header()
 
     def update_xml_header(self):
@@ -48,7 +60,7 @@ class FcpXML(object):
         self.sequence.find('duration').text = str(duration)
         timecode_node = self.sequence.find('timecode')
         timecode_node.find('string').text = string
-        timecode_node.find('frame').text = str(frame)
+        timecode_node.find('frame').text = str(frame-1)
         # TODO update duration from by db info
 
     def get_tracks(self):
@@ -74,22 +86,23 @@ class FcpXML(object):
         """
         track = ET.SubElement(self.video_node, 'track')
 
-        first_tc = self.c.execute(
-            'SELECT tc FROM tracks WHERE cam_id=? ORDER BY tc LIMIT 1;',
-            cam_id).fetchone()[0]
-        last_tc = self.c.execute(
-            'SELECT tc FROM tracks WHERE cam_id=? ORDER BY tc DESC LIMIT 1;',
-            cam_id).fetchone()[0]
-        last_clip_duration = self.c.execute(
-            'SELECT duration FROM tracks WHERE cam_id=? ORDER BY tc DESC LIMIT 1;',
-            cam_id).fetchone()[0]
+        # first_tc = self.c.execute(
+        #     'SELECT tc FROM tracks WHERE cam_id=? ORDER BY tc LIMIT 1;',
+        #     cam_id).fetchone()[0]
+        # last_tc = self.c.execute(
+        #     'SELECT tc FROM tracks WHERE cam_id=? ORDER BY tc DESC LIMIT 1;',
+        #     cam_id).fetchone()[0]
+        # last_clip_duration = self.c.execute(
+        #     'SELECT duration FROM tracks WHERE cam_id=? ORDER BY tc DESC LIMIT 1;',
+        #     cam_id).fetchone()[0]
+        #
+        # track_begin = Timecode(FRAMERATE, first_tc).frames
+        # track_end = Timecode(FRAMERATE, last_tc).frames + last_clip_duration
 
-        track_begin = Timecode(FRAMERATE, first_tc).frames
-        track_end = Timecode(FRAMERATE, last_tc).frames + last_clip_duration
-
-        clips = self.c.execute('SELECT id, cam_id, tc, duration, fullpath '
-                               'FROM tracks WHERE cam_id=? ORDER BY tc;',
-                               cam_id)
+        clips = self.c.execute(
+            'SELECT id, cam_id, tc, duration, fir_f, last_f, fullpath FROM '
+            'tracks WHERE cam_id=? ORDER BY fir_f;',
+            cam_id)
         # TODO use dict to store sql data
 
         for clip in clips:
@@ -98,8 +111,10 @@ class FcpXML(object):
             data['cam_id'] = clip[1]
             data['tc'] = clip[2]
             data['duration'] = clip[3]
-            data['path'] = clip[4]
-            self.insert_clipitem(track, data,  track_begin, track_end)
+            data['fir_f'] = clip[4]
+            data['last_f'] = clip[5]
+            data['path'] = clip[6]
+            self.insert_clipitem(track, data)
 
         node_enabled = ET.Element('enabled')
         node_enabled.text = 'TRUE'
@@ -108,14 +123,13 @@ class FcpXML(object):
         track.append(node_enabled)
         track.append(node_locked)
 
-    def insert_clipitem(self, track, data, track_begin, track_end):
+    def insert_clipitem(self, track, data):
         id = data['id']
         filename = os.path.basename(data['path'])
         name = os.path.splitext(filename)[0]
         duration = data['duration']
-        frame = Timecode(str(FRAMERATE), data['tc']).frames
-        start = frame - track_begin
-        end = start + duration
+        start = data['fir_f'] - self.timeline_first
+        end = data['last_f'] -self.timeline_first
         masterclipid = name + ' ' + str(id)
         # fixme(maybe problem here)
         pathurl = 'file://localhost' + data['path']
@@ -136,7 +150,8 @@ class FcpXML(object):
 
         file_timcode = clipitem_file.find('timecode')
         file_timcode.find('string').text = data['tc']
-        file_timcode.find('frame').text = str(frame-1)
+        frame = Timecode(FRAMERATE, data['tc']).frames - 1
+        file_timcode.find('frame').text = str(frame)
 
         file_media = clipitem_file.find('media')
         media_video = file_media.find('video')

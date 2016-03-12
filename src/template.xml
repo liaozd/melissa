@@ -5,7 +5,7 @@
 	<uuid>[place holder]</uuid>
 	<updatebehavior>add</updatebehavior>
 	<name>Melissa DIT Tool XML Template</name>
-	<duration>[place holder]</duration>
+	<duration>[whole duration of the project]</duration>
 	<rate>
 		<ntsc>FALSE</ntsc>
 		<timebase>25</timebase>
