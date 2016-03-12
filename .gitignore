@@ -5,6 +5,7 @@
 
 # sqlite.db
 *.db
+output.xml
 
 *.fcp
 
