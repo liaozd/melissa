@@ -5,6 +5,7 @@ import os
 import sqlite3
 import uuid
 
+import time
 from timecode import Timecode
 
 from lxml import etree as ET
@@ -152,10 +153,16 @@ class FcpXML(object):
         tracks = self.get_tracks()
         for track in tracks:
             self.insert_track(track)
-        output = 'output.xml'
+
+        output_folder = os.path.join(os.environ['HOME'], 'Desktop/melissa')
+        if not os.path.exists(output_folder):
+            os.makedirs(output_folder)
+        timestr = time.strftime("%Y%m%d-%H%M")
+        output_name = 'output_' + timestr + '.xml'
+        output = os.path.join(output_folder, output_name)
         self.base_tree.write(output, pretty_print=True, xml_declaration=True,
                              encoding='UTF-8')
-        print 'Create XML output.xml'
+        print 'Create XML: ', output
 
 
 if __name__ == '__main__':
