@@ -31,8 +31,8 @@ def read_clip_meta(clips):
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
         data = json.loads(proc.communicate()[0])
-        data_needed = {'timecode': data['streams'][0]['tags']['timecode'],
-                       'duration': data['streams'][0]['duration'],
+        data_needed = {'timecode': data['streams'][-1]['tags']['timecode'],
+                       'duration': data['streams'][-1]['duration'],
                        'all_meta': data,
                        }
         return data_needed
