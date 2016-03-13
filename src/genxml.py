@@ -11,6 +11,7 @@ from lxml import etree as ET
 from config import DB_FILE, FRAMERATE, CLIP_SAMPLE_XML
 
 parser = ET.XMLParser(remove_blank_text=True)
+xml_template = os.path.join(os.path.dirname(__file__), 'template.xml')
 
 
 def dict_factory(cursor, row):
@@ -32,7 +33,7 @@ def get_columns(c, table='tracks'):
 
 
 class FcpXML(object):
-    def __init__(self, xml_output='output.xml', xml_template='template.xml'):
+    def __init__(self, xml_output='output.xml', xml_template=xml_template):
         print 'Read database: {0}'.format(DB_FILE)
         self.db = DB_FILE
         self.conn = sqlite3.connect(DB_FILE)
@@ -153,6 +154,7 @@ class FcpXML(object):
         output = 'output.xml'
         self.base_tree.write(output, pretty_print=True, xml_declaration=True,
                              encoding='UTF-8')
+        print 'Create XML output.xml'
 
 
 if __name__ == '__main__':
