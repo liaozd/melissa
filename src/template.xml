@@ -15,8 +15,8 @@
 			<ntsc>FALSE</ntsc>
 			<timebase>25</timebase>
 		</rate>
-		<string>01:00:00:00</string>
-		<frame>90000</frame>
+		<string>[place holder]01:00:00:00</string>
+		<frame>[place holder]90000</frame>
 		<source>source</source>
 		<displayformat>NDF</displayformat>
 	</timecode>

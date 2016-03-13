@@ -5,9 +5,9 @@ DB_FILE = 'melissa.db'
 FRAMERATE = 25
 
 CLIP_SAMPLE_XML = """
-<clipitem id="0301_280_a_d02_cam20264_01 ">
-    <name>0301_280_a_d02_cam20264_01</name>
-    <duration>293</duration>
+<clipitem id="[place holder]0301_280_a_d02_cam20264_01 ">
+    <name>[place holder]0301_280_a_d02_cam20264_01</name>
+    <duration>[place holder]293</duration>
     <rate>
         <ntsc>FALSE</ntsc>
         <timebase>25</timebase>
@@ -19,9 +19,9 @@ CLIP_SAMPLE_XML = """
     <pixelaspectratio>Square</pixelaspectratio>
     <anamorphic>FALSE</anamorphic>
     <alphatype>none</alphatype>
-    <masterclipid>0301_280_a_d02_cam20264_01 1</masterclipid>
-    <file id="0301_280_a_d02_cam20264_01 2">
-        <name>0301_280_a_d02_cam20264_01.mov</name>
+    <masterclipid>[place holder]0301_280_a_d02_cam20264_01 1</masterclipid>
+    <file id="[place holder]0301_280_a_d02_cam20264_01 2">
+        <name>[place holder]0301_280_a_d02_cam20264_01.mov</name>
         <pathurl>file://localhost/git-repos/melissa/input/160303/ep01/01_video/20160301/280/0301_280_a_003/0301_280_a_d02_cam20264_01.mov</pathurl>
         <rate>
             <timebase>25</timebase>
