@@ -122,12 +122,13 @@ class FcpXML(object):
         name = os.path.splitext(filename)[0]
         duration = data['duration']
         start = data['fir_f'] - self.timeline_first
-        end = data['last_f'] -self.timeline_first
+        end = data['last_f'] - self.timeline_first
         masterclipid = name + ' ' + str(id)
         # fixme(maybe problem here)
         pathurl = 'file://localhost' + data['path']
 
         clipitem = ET.fromstring(CLIP_SAMPLE_XML, parser)
+        clipitem.attrib['id'] = name + ' '
         clipitem.find('name').text = name
         clipitem.find('duration').text = str(duration)
         clipitem.find('out').text = str(duration)
