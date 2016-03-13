@@ -72,7 +72,7 @@ class FcpXML(object):
         Get all tracks define by camera id
         :return: all_tracks in list
         """
-        sql = 'SELECT DISTINCT CAM_ID FROM tracks;'
+        sql = 'SELECT DISTINCT CAM_ID FROM tracks ORDER BY CAM_ID;'
         self.c.execute(sql)
         all_tracks = self.c.fetchall()
         return all_tracks
@@ -90,10 +90,12 @@ class FcpXML(object):
         """
         track = ET.SubElement(self.video_node, 'track')
 
-        clips = self.c.execute(
+        self.c.execute(
             'SELECT id, cam_id, tc, duration, fir_f, last_f, fullpath FROM '
             'tracks WHERE cam_id=? ORDER BY fir_f;',
             cam_id)
+        clips = self.c.fetchall()
+
         # TODO use dict to store sql data
 
         for clip in clips:
@@ -157,7 +159,7 @@ class FcpXML(object):
         output_folder = os.path.join(os.environ['HOME'], 'Desktop/melissa')
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
-        timestr = time.strftime("%Y%m%d-%H%M")
+        timestr = time.strftime("%Y%m%d")
         output_name = 'output_' + timestr + '.xml'
         output = os.path.join(output_folder, output_name)
         self.base_tree.write(output, pretty_print=True, xml_declaration=True,
