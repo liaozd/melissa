@@ -11,7 +11,7 @@ from timecode import Timecode
 
 from config import DB_FILE, FRAMERATE, CLIP_FILTER
 
-REG_CAM_ID = '^(\d{4}_[a-zA-Z0-9]+)[a-zA-Z0-9_]+(\d{2})$'
+REG_CAM_ID = '^(\d{4}_[a-zA-Z0-9]+)(_[a-zA-Z]{1}|_[a-zA-Z]{2,})?(_\d{2})$'
 
 
 '''
@@ -86,9 +86,12 @@ class Scanner(object):
 
     def scan(self, path):
         for path, subdirs, files in os.walk(path):
-            match = re.match(REG_CAM_ID, os.path.basename(path))
-            if match:
-                camera_id = match.group(1) + '_' + match.group(2)
+            m = re.match(REG_CAM_ID, os.path.basename(path))
+            if m:
+                if m.group(2) is None or len(m.group(2)) == 2:
+                    camera_id = m.group(1) + m.group(3)
+                elif m.group(2) > 2:
+                    camera_id = m.group(1) + m.group(2) + m.group(3)
                 for file in files:
                     extension = os.path.splitext(file)[1]
                     if not file.startswith('.') and \
@@ -109,6 +112,6 @@ class Scanner(object):
         self.conn.commit()
 
 if __name__ == '__main__':
-    path = '/git-repos/melissa/input/160303/'
+    path = '/Users/SCENE-01/Desktop/melissa/ep02/01_video/20160312'
     scanner = Scanner()
     scanner.scan(path)
