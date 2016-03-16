@@ -31,11 +31,18 @@ def read_clip_meta(clips):
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
     data = json.loads(proc.communicate()[0])
-    data_needed = {'tc_in': data['streams'][-1]['tags']['timecode'],
-                   'duration': data['streams'][-1]['duration'],
-                   'meta': data,
-                   }
-    return data_needed
+    for stream in data['streams']:
+        if stream.get('codec_type') == 'video' and \
+                        stream.get('r_frame_rate') == '25/1':
+            # Some of the stream doesn't has a timecode key
+            tc_in = stream['tags'].get('timecode')
+            if not tc_in:
+                tc_in = data['format']['tags']['timecode']
+            data_needed = {'tc_in': tc_in,
+                           'duration': stream['duration'],
+                           'meta': data,
+                           }
+            return data_needed
     # except Exception:
     #     return None
 
@@ -80,12 +87,12 @@ class Scanner(object):
         last_f = fir_f + duration
         tc_out = '0'
         sql = ('INSERT INTO TRACKS '
-               '(CAM_ID,TC_IN, TC_OUT,DURATION,FIR_F,LAST_F,META,FULLPATH) '
+               '(CAM_ID,TC_IN, TC_OUT,FIR_F,LAST_F,DURATION,FULLPATH,META) '
                'VALUES ("{CAM_ID}","{TC_IN}","{TC_OUT}","{FIR_F}","{LAST_F}",'
                '"{DURATION}","{META}","{FULLPATH}");'.
                format(CAM_ID=cam_id, TC_IN=tc_in, TC_OUT=tc_out, FIR_F=fir_f,
-                      LAST_F=last_f, DURATION=duration, META=meta,
-                      FULLPATH=fullpath))
+                      LAST_F=last_f, DURATION=duration, FULLPATH=fullpath,
+                      META=meta,))
         self.c.execute(sql)
 
     def scan(self, path):
