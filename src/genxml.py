@@ -59,7 +59,7 @@ class FcpXML(object):
     def update_xml_header(self):
         duration = self.timeline_last - self.timeline_first
         string, frame = self.c.execute(
-            'SELECT tc, fir_f FROM tracks ORDER BY fir_f LIMIT 1;').fetchone()
+            'SELECT tc_in, fir_f FROM tracks ORDER BY fir_f LIMIT 1;').fetchone()
         self.sequence.find('uuid').text = str(uuid.uuid1())
         self.sequence.find('duration').text = str(duration)
         timecode_node = self.sequence.find('timecode')
@@ -91,7 +91,7 @@ class FcpXML(object):
         track = ET.SubElement(self.video_node, 'track')
 
         self.c.execute(
-            'SELECT id, cam_id, tc, duration, fir_f, last_f, fullpath FROM '
+            'SELECT id, cam_id, tc_in, duration, fir_f, last_f, fullpath FROM '
             'tracks WHERE cam_id=? ORDER BY fir_f;',
             cam_id)
         clips = self.c.fetchall()
@@ -102,7 +102,7 @@ class FcpXML(object):
             data = dict()
             data['id'] = clip[0]
             data['cam_id'] = clip[1]
-            data['tc'] = clip[2]
+            data['tc_in'] = clip[2]
             data['duration'] = clip[3]
             data['fir_f'] = clip[4]
             data['last_f'] = clip[5]
@@ -143,8 +143,8 @@ class FcpXML(object):
         clipitem_file.find('duration').text = str(duration)
 
         file_timcode = clipitem_file.find('timecode')
-        file_timcode.find('string').text = data['tc']
-        frame = Timecode(FRAMERATE, data['tc']).frames - 1
+        file_timcode.find('string').text = data['tc_in']
+        frame = Timecode(FRAMERATE, data['tc_in']).frames - 1
         file_timcode.find('frame').text = str(frame)
 
         file_media = clipitem_file.find('media')
