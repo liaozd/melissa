@@ -21,30 +21,30 @@ ffmpeg -i [SourcePath] -vcodec copy -acodec copy -timecode 1:23:45:01 [DestPath]
 
 
 def read_clip_meta(clips):
-    # try:
-    """
-    Use command get clip meta:
-    ffprobe -print_format json -show_format -show_streams [SourcePath]
-    """
-    cmd = ['ffprobe', '-v', 'quiet', '-print_format', 'json',
-           '-show_format', '-show_streams', clips]
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE)
-    data = json.loads(proc.communicate()[0])
-    for stream in data['streams']:
-        if stream.get('codec_type') == 'video' and \
-                        stream.get('r_frame_rate') == '25/1':
-            # Some of the stream doesn't has a timecode key
-            tc_in = stream['tags'].get('timecode')
-            if not tc_in:
-                tc_in = data['format']['tags']['timecode']
-            data_needed = {'tc_in': tc_in,
-                           'duration': stream['duration'],
-                           'meta': data,
-                           }
-            return data_needed
-    # except Exception:
-    #     return None
+    try:
+        """
+        Use command get clip meta:
+        ffprobe -print_format json -show_format -show_streams [SourcePath]
+        """
+        cmd = ['ffprobe', '-v', 'quiet', '-print_format', 'json',
+               '-show_format', '-show_streams', clips]
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE)
+        data = json.loads(proc.communicate()[0])
+        for stream in data['streams']:
+            if stream.get('codec_type') == 'video' and \
+                            stream.get('r_frame_rate') == '25/1':
+                # Some of the stream doesn't has a timecode key
+                tc_in = stream['tags'].get('timecode')
+                if not tc_in:
+                    tc_in = data['format']['tags']['timecode']
+                data_needed = {'tc_in': tc_in,
+                               'duration': stream['duration'],
+                               'meta': data,
+                               }
+                return data_needed
+    except Exception:
+        return None
 
 
 class Scanner(object):
@@ -85,7 +85,7 @@ class Scanner(object):
     def insert_record(self, cam_id, tc_in, duration, meta, fullpath):
         fir_f = Timecode(FRAMERATE, tc_in).frames
         last_f = fir_f + duration
-        tc_out = '0'
+        tc_out = Timecode(FRAMERATE, frames=last_f-1)
         sql = ('INSERT INTO TRACKS '
                '(CAM_ID,TC_IN, TC_OUT,FIR_F,LAST_F,DURATION,FULLPATH,META) '
                'VALUES ("{CAM_ID}","{TC_IN}","{TC_OUT}","{FIR_F}","{LAST_F}",'
