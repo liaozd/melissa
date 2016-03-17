@@ -87,7 +87,7 @@ class Scanner(object):
         last_f = fir_f + duration
         tc_out = Timecode(FRAMERATE, frames=last_f-1)
         sql = ('INSERT INTO TRACKS '
-               '(CAM_ID,TC_IN, TC_OUT,FIR_F,LAST_F,DURATION,FULLPATH,META) '
+               '(CAM_ID,TC_IN, TC_OUT,FIR_F,LAST_F,DURATION,META,FULLPATH) '
                'VALUES ("{CAM_ID}","{TC_IN}","{TC_OUT}","{FIR_F}","{LAST_F}",'
                '"{DURATION}","{META}","{FULLPATH}");'.
                format(CAM_ID=cam_id, TC_IN=tc_in, TC_OUT=tc_out, FIR_F=fir_f,
