@@ -47,6 +47,17 @@ def read_clip_meta(clips):
         return None
 
 
+def get_tracks(curser):
+        """
+        Get all tracks define by camera id
+        :return: all_tracks in list
+        """
+        sql = 'SELECT DISTINCT TRACK_ID FROM tracks ORDER BY TRACK_ID;'
+        curser.execute(sql)
+        all_tracks = curser.fetchall()
+        return all_tracks
+
+
 class Scanner(object):
 
     def __init__(self):
@@ -69,9 +80,10 @@ class Scanner(object):
         META: all metadata
         FULLPATH: file full path on disk
         """
-        self.c.execute('CREATE   TABLE    TRACKS'
+        self.c.execute('CREATE TABLE TRACKS'
                        '(ID      INTEGER  PRIMARY KEY AUTOINCREMENT,'
                        'CAM_ID   CHAR(100)            NOT NULL,'
+                       'TRACK_ID CHAR(100),'
                        'TC_IN    CHAR(11)             NOT NULL,'
                        'TC_OUT   CHAR(11)             NOT NULL,'
                        'FIR_F    INT                  NOT NULL,'
@@ -83,17 +95,51 @@ class Scanner(object):
 
     # TODO use dict pass parameters
     def insert_record(self, cam_id, tc_in, duration, meta, fullpath):
+        """When initiate, track_id = cam_id, then use rebuild_track() put
+        overlap clip into the second track
+        """
         fir_f = Timecode(FRAMERATE, tc_in).frames
         last_f = fir_f + duration
         tc_out = Timecode(FRAMERATE, frames=last_f-1)
-        sql = ('INSERT INTO TRACKS '
-               '(CAM_ID,TC_IN, TC_OUT,FIR_F,LAST_F,DURATION,META,FULLPATH) '
-               'VALUES ("{CAM_ID}","{TC_IN}","{TC_OUT}","{FIR_F}","{LAST_F}",'
-               '"{DURATION}","{META}","{FULLPATH}");'.
-               format(CAM_ID=cam_id, TC_IN=tc_in, TC_OUT=tc_out, FIR_F=fir_f,
-                      LAST_F=last_f, DURATION=duration, FULLPATH=fullpath,
-                      META=meta,))
+        track_id = cam_id
+        sql = ('INSERT INTO TRACKS (CAM_ID,TRACK_ID,TC_IN,TC_OUT,FIR_F,LAST_F,'
+               'DURATION,META,FULLPATH) '
+               'VALUES ("{CAM_ID}","{TRACK_ID}","{TC_IN}","{TC_OUT}",'
+               '"{FIR_F}","{LAST_F}","{DURATION}","{META}","{FULLPATH}");'.
+               format(CAM_ID=cam_id, TRACK_ID=track_id, TC_IN=tc_in,
+                      TC_OUT=tc_out, FIR_F=fir_f, LAST_F=last_f,
+                      DURATION=duration, FULLPATH=fullpath, META=meta,))
         self.c.execute(sql)
+
+    def rebuild_tracks(self):
+        tracks = get_tracks(self.c)
+        for track in tracks:
+            self.c.execute(
+                'SELECT id, fir_f, last_f, track_id, fullpath '
+                'FROM tracks WHERE track_id=? ORDER BY fir_f;',
+                track)
+            all_clips = self.c.fetchall()
+            overlay_clips = []
+            # data: (id, fir_f, last_f, track_id)
+            for idx, clip in enumerate(all_clips):
+                if idx is not 0:
+                    # Compare current clip in-point with the out-point of last
+                    # clip.
+                    last_clip = all_clips[idx-1]
+                    if clip[1] <= last_clip[1]:
+                        fullpath = clip[-1]
+                        print "Timecode duplicated:", fullpath
+                        overlay_clips.append(clip)
+            # Update track_id in database
+            for clip in overlay_clips:
+                track_id = clip[3]
+                new_track = track_id + '_overlap'
+                id = clip[0]
+                sql = ('UPDATE TRACKS SET track_id = "{new_track}" '
+                       'WHERE ID = "{id}";'.format(new_track=new_track, id=id))
+                print sql
+                self.c.execute(sql)
+        self.conn.commit()
 
     def scan(self, path):
         for path, subdirs, files in os.walk(path):
@@ -120,9 +166,9 @@ class Scanner(object):
                         else:
                             print "Warning!, {0} is not recognizable.".\
                                 format(fullpath)
-        self.conn.commit()
 
 if __name__ == '__main__':
-    path = '/Users/SCENE-01/Desktop/melissa/ep02/01_video/20160312'
+    path = '/git-repos/melissa/input/160303/ep01/01_video'
     scanner = Scanner()
     scanner.scan(path)
+    scanner.rebuild_tracks()
