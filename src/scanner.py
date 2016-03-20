@@ -126,7 +126,7 @@ class Scanner(object):
                     # Compare current clip in-point with the out-point of last
                     # clip.
                     last_clip = all_clips[idx-1]
-                    if clip[1] <= last_clip[1]:
+                    if clip[1] <= last_clip[2]:
                         fullpath = clip[-1]
                         print "Timecode duplicated:", fullpath
                         overlay_clips.append(clip)
