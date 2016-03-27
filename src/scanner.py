@@ -77,7 +77,9 @@ class Scanner(object):
     def build_db(self):
         self.c.execute('DROP TABLE IF EXISTS TRACKS;')
         """
-        CAM_ID:
+        CAM_ID: Camera name
+        TRACK_ID: ID for each tracks, to distinguish them from each other
+        TRACK_IDX: Track index for genxml to guild tracks sequentially.
         TC_IN: in point, get from the metadata
         TC_OUT: out point, calculated
         DURATION: duration in the metadata
@@ -89,17 +91,18 @@ class Scanner(object):
         AUDIO: save the audio codec time base if file have a audio
         """
         self.c.execute('CREATE TABLE TRACKS'
-                       '(ID      INTEGER  PRIMARY KEY AUTOINCREMENT,'
-                       'CAM_ID   CHAR(100)            NOT NULL,'
-                       'TRACK_ID CHAR(100),'
-                       'TC_IN    CHAR(11)             NOT NULL,'
-                       'TC_OUT   CHAR(11)             NOT NULL,'
-                       'FIR_F    INT                  NOT NULL,'
-                       'LAST_F   INT                  NOT NULL,'
-                       'DURATION INT                  NOT NULL,'
-                       'META     TEXT                 NOT NULL,'
-                       'FULLPATH CHAR(300)            NOT NULL,'
-                       'AUDIO    CHAR(18));')
+                       '(ID       INTEGER  PRIMARY KEY AUTOINCREMENT,'
+                       'CAM_ID    CHAR(100)            NOT NULL,'
+                       'TRACK_ID  CHAR(100),'
+                       'TRACK_IDX INT,'
+                       'TC_IN     CHAR(11)             NOT NULL,'
+                       'TC_OUT    CHAR(11)             NOT NULL,'
+                       'FIR_F     INT                  NOT NULL,'
+                       'LAST_F    INT                  NOT NULL,'
+                       'DURATION  INT                  NOT NULL,'
+                       'META      TEXT                 NOT NULL,'
+                       'FULLPATH  CHAR(300)            NOT NULL,'
+                       'AUDIO     CHAR(18));')
         self.conn.commit()
 
     # TODO use dict pass parameters
@@ -148,8 +151,15 @@ class Scanner(object):
                 id = clip[0]
                 sql = ('UPDATE TRACKS SET track_id = "{new_track}" '
                        'WHERE ID = "{id}";'.format(new_track=new_track, id=id))
-                print sql
                 self.c.execute(sql)
+        # After update the overlap tracks, get all tracks again to update track
+        # index, TRACK_IDX column in the database
+        tracks = get_tracks(self.c)
+        for index, track in enumerate(tracks):
+            sql = ('UPDATE TRACKS SET track_idx = {track_idx} WHERE '
+                   'track_id = "{track_id}";'.format(track_idx=index+1,
+                                                     track_id=track[0]))
+            self.c.execute(sql)
         self.conn.commit()
 
     def scan(self, path):
@@ -180,7 +190,8 @@ class Scanner(object):
                                 format(fullpath)
 
 if __name__ == '__main__':
-    path = '/Users/SCENE-01/Desktop/melissa/ep02/01_video/20160312'
+    # path = '/Users/SCENE-01/Desktop/melissa/ep02/01_video/20160312'
+    path = '/git-repos/melissa/input/160303/ep01/01_video/20160301'
     scanner = Scanner()
     scanner.scan(path)
     scanner.rebuild_tracks()
