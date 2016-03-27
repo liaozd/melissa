@@ -31,6 +31,7 @@ def read_clip_meta(clips):
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
         data = json.loads(proc.communicate()[0])
+        data_needed = dict()
         for stream in data['streams']:
             if stream.get('codec_type') == 'video' and \
                             stream.get('r_frame_rate') == '25/1':
@@ -38,12 +39,18 @@ def read_clip_meta(clips):
                 tc_in = stream['tags'].get('timecode')
                 if not tc_in:
                     tc_in = data['format']['tags']['timecode']
-                data_needed = {'tc_in': tc_in,
-                               'duration': stream['duration'],
-                               'meta': data,
-                               }
-                return data_needed
+                data_needed.update({
+                    'tc_in': tc_in,
+                    'duration': stream['duration'],
+                    'meta': data
+                })
+            elif stream.get('codec_type') == 'audio':
+                data_needed.update({'audio': stream.get('codec_time_base')})
+        if not data_needed.get('audio'):
+            data_needed.update({'audio': 'N/A'})
+        return data_needed
     except Exception:
+        print 'No data extraced from mov file.'
         return None
 
 
@@ -79,6 +86,7 @@ class Scanner(object):
                 fcp xml <end>
         META: all metadata
         FULLPATH: file full path on disk
+        AUDIO: save the audio codec time base if file have a audio
         """
         self.c.execute('CREATE TABLE TRACKS'
                        '(ID      INTEGER  PRIMARY KEY AUTOINCREMENT,'
@@ -90,11 +98,12 @@ class Scanner(object):
                        'LAST_F   INT                  NOT NULL,'
                        'DURATION INT                  NOT NULL,'
                        'META     TEXT                 NOT NULL,'
-                       'FULLPATH CHAR(300)            NOT NULL);')
+                       'FULLPATH CHAR(300)            NOT NULL,'
+                       'AUDIO    CHAR(18));')
         self.conn.commit()
 
     # TODO use dict pass parameters
-    def insert_record(self, cam_id, tc_in, duration, meta, fullpath):
+    def insert_record(self, cam_id, tc_in, duration, meta, fullpath, audio):
         """When initiate, track_id = cam_id, then use rebuild_track() put
         overlap clip into the second track
         """
@@ -103,12 +112,14 @@ class Scanner(object):
         tc_out = Timecode(FRAMERATE, frames=last_f-1)
         track_id = cam_id
         sql = ('INSERT INTO TRACKS (CAM_ID,TRACK_ID,TC_IN,TC_OUT,FIR_F,LAST_F,'
-               'DURATION,META,FULLPATH) '
+               'DURATION,META,FULLPATH, AUDIO) '
                'VALUES ("{CAM_ID}","{TRACK_ID}","{TC_IN}","{TC_OUT}",'
-               '"{FIR_F}","{LAST_F}","{DURATION}","{META}","{FULLPATH}");'.
+               '"{FIR_F}","{LAST_F}","{DURATION}","{META}","{FULLPATH}",'
+               '"{AUDIO}");'.
                format(CAM_ID=cam_id, TRACK_ID=track_id, TC_IN=tc_in,
                       TC_OUT=tc_out, FIR_F=fir_f, LAST_F=last_f,
-                      DURATION=duration, FULLPATH=fullpath, META=meta,))
+                      DURATION=duration, META=meta, FULLPATH=fullpath,
+                      AUDIO=audio))
         self.c.execute(sql)
 
     def rebuild_tracks(self):
@@ -161,14 +172,15 @@ class Scanner(object):
                                                tc_in=data['tc_in'],
                                                duration=frames,
                                                meta=data,
-                                               fullpath=fullpath)
+                                               fullpath=fullpath,
+                                               audio=data['audio'])
                             print 'Insert clip: {0}'.format(fullpath)
                         else:
                             print "Warning!, {0} is not recognizable.".\
                                 format(fullpath)
 
 if __name__ == '__main__':
-    path = '/git-repos/melissa/input/160303/ep01/01_video'
+    path = '/Users/SCENE-01/Desktop/melissa/ep02/01_video/20160312'
     scanner = Scanner()
     scanner.scan(path)
     scanner.rebuild_tracks()
