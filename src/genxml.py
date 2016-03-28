@@ -10,18 +10,12 @@ from timecode import Timecode
 
 from lxml import etree as ET
 
-from config import DB_FILE, FRAMERATE, CLIP_SAMPLE_XML
+from config import DB_FILE, FRAMERATE, VIDEO_TEMPLATE, LINK_TEMPLATE, \
+    AUDIO_NODE_INSIDE_VIDEO
 from scanner import get_tracks
 
 parser = ET.XMLParser(remove_blank_text=True)
 xml_template = os.path.join(os.path.dirname(__file__), 'template.xml')
-
-
-def dict_factory(cursor, row):
-    dict = {}
-    for idx, col in enumerate(cursor.description):
-        dict[col[0]] = row[idx]
-    return dict
 
 
 def get_columns(curser, table='tracks'):
@@ -33,6 +27,21 @@ def get_columns(curser, table='tracks'):
     for col in info:
         columns.append(col[1])
     return columns
+
+
+def get_links(name, track_idx):
+        root = ET.fromstring(LINK_TEMPLATE, parser)
+        # Video link
+        root[0].find('linkclipref').text = name
+        root[0].find('trackindex').text = str(track_idx)
+        # Two audio links
+        first_idx = str(track_idx*2 - 1)
+        root[1].find('linkclipref').text = name + ' ' + first_idx
+        root[1].find('trackindex').text = first_idx
+        second_idx = str(track_idx*2)
+        root[2].find('linkclipref').text = name + ' ' + second_idx
+        root[2].find('trackindex').text = second_idx
+        return root.getchildren()
 
 
 class FcpXML(object):
@@ -69,7 +78,7 @@ class FcpXML(object):
         timecode_node.find('frame').text = str(frame-1)
         # TODO update duration from by db info
 
-    def insert_track(self, track_id):
+    def insert_video_track(self, track_id):
         """
         <track>
             <clipitem id="0301_280_a_d02_cam20264_01 "></clipitem>
@@ -83,8 +92,8 @@ class FcpXML(object):
         track = ET.SubElement(self.video_node, 'track')
 
         self.c.execute(
-            'SELECT id, track_id, tc_in, duration, fir_f, last_f, fullpath '
-            'FROM tracks WHERE track_id=? ORDER BY fir_f;',
+            'SELECT id, track_id, tc_in, duration, fir_f, last_f, fullpath,'
+            'track_idx, audio FROM tracks WHERE track_id=? ORDER BY fir_f;',
             track_id)
         clips = self.c.fetchall()
         # TODO use dict to store sql data
@@ -97,8 +106,10 @@ class FcpXML(object):
             data['duration'] = clip[3]
             data['fir_f'] = clip[4]
             data['last_f'] = clip[5]
-            data['path'] = clip[6]
-            self.insert_clipitem(track, data)
+            data['fullpath'] = clip[6]
+            data['track_idx'] = clip[7]
+            data['audio'] = clip[8]
+            self.insert_video_clip(track, data)
 
         node_enabled = ET.Element('enabled')
         node_enabled.text = 'TRUE'
@@ -107,18 +118,19 @@ class FcpXML(object):
         track.append(node_enabled)
         track.append(node_locked)
 
-    def insert_clipitem(self, track, data):
+    def insert_video_clip(self, track, data):
+        # Cook all the data for inserting
         id = data['id']
-        filename = os.path.basename(data['path'])
+        filename = os.path.basename(data['fullpath'])
         name = os.path.splitext(filename)[0]
         duration = data['duration']
         start = data['fir_f'] - self.timeline_first
         end = data['last_f'] - self.timeline_first
         masterclipid = name + ' ' + str(id)
-        # fixme(maybe problem here)
-        pathurl = 'file://localhost' + data['path']
+        pathurl = 'file://localhost' + data['fullpath']
+        track_idx = data['track_idx']
 
-        clipitem = ET.fromstring(CLIP_SAMPLE_XML, parser)
+        clipitem = ET.fromstring(VIDEO_TEMPLATE, parser)
         clipitem.attrib['id'] = name + ' '
         clipitem.find('name').text = name
         clipitem.find('duration').text = str(duration)
@@ -127,26 +139,39 @@ class FcpXML(object):
         clipitem.find('end').text = str(end)
         clipitem.find('masterclipid').text = masterclipid
 
+        # <file id=""> node
         clipitem_file = clipitem.find('file')
         clipitem_file.attrib['id'] = name + ' 2'
         clipitem_file.find('name').text = filename
         clipitem_file.find('pathurl').text = pathurl
         clipitem_file.find('duration').text = str(duration)
 
+        # <file.timecode> node
         file_timcode = clipitem_file.find('timecode')
         file_timcode.find('string').text = data['tc_in']
         frame = Timecode(FRAMERATE, data['tc_in']).frames - 1
         file_timcode.find('frame').text = str(frame)
 
+        # <file.meida> node
         file_media = clipitem_file.find('media')
         media_video = file_media.find('video')
         media_video.find('duration').text = str(duration)
+        # insert <audio> node if mov has sound
+        if data['audio'] != 'N/A':
+            audio_node = ET.fromstring(AUDIO_NODE_INSIDE_VIDEO, parser)
+            file_media.append(audio_node)
+            links = get_links(name, track_idx)
+            for link in links:
+                clipitem.append(link)
         track.append(clipitem)
+
+    def insert_audio_clip(self, track, data):
+        pass
 
     def create_xml(self):
         tracks = get_tracks(self.c)
         for track in tracks:
-            self.insert_track(track)
+            self.insert_video_track(track)
         output_folder = os.path.join(os.environ['HOME'], 'Desktop/melissa')
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)

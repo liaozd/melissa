@@ -71,6 +71,14 @@
 				</appspecificdata>
 			</format>
 		</video>
+		<audio>
+			<format>
+				<samplecharacteristics>
+					<depth>16</depth>
+					<samplerate>48000</samplerate>
+				</samplecharacteristics>
+			</format>
+		</audio>
 	</media>
 	<ismasterclip>FALSE</ismasterclip>
 </sequence>
