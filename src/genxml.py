@@ -10,8 +10,9 @@ from timecode import Timecode
 
 from lxml import etree as ET
 
-from config import DB_FILE, FRAMERATE, VIDEO_TEMPLATE, LINK_TEMPLATE, \
-    AUDIO_NODE_INSIDE_VIDEO
+from config import DB_FILE, FRAMERATE, VIDEO_CLIP_TEMPLATE, \
+    AUDIO_NODE_INSIDE_VIDEO, AUDIO_CLIP_TEMPLATE, LINK_VIDEO_TEMPLATE, \
+    LINK_AUDIO_TEMPLATE
 from scanner import get_tracks
 
 parser = ET.XMLParser(remove_blank_text=True)
@@ -29,19 +30,28 @@ def get_columns(curser, table='tracks'):
     return columns
 
 
-def get_links(name, track_idx):
-        root = ET.fromstring(LINK_TEMPLATE, parser)
-        # Video link
-        root[0].find('linkclipref').text = name
-        root[0].find('trackindex').text = str(track_idx)
-        # Two audio links
-        first_idx = str(track_idx*2 - 1)
-        root[1].find('linkclipref').text = name + ' ' + first_idx
-        root[1].find('trackindex').text = first_idx
-        second_idx = str(track_idx*2)
-        root[2].find('linkclipref').text = name + ' ' + second_idx
-        root[2].find('trackindex').text = second_idx
-        return root.getchildren()
+def get_clips(curser, track_id):
+    curser.execute(
+        'SELECT id, track_id, tc_in, duration, fir_f, last_f, fullpath,'
+        'track_idx, audio FROM tracks WHERE track_id=? ORDER BY fir_f;',
+        track_id)
+    clips = curser.fetchall()
+    # TODO use dict to store sql data
+    return clips
+
+
+def get_clip_data(clip):
+    data = dict()
+    data['id'] = clip[0]
+    data['track_id'] = clip[1]
+    data['tc_in'] = clip[2]
+    data['duration'] = clip[3]
+    data['fir_f'] = clip[4]
+    data['last_f'] = clip[5]
+    data['fullpath'] = clip[6]
+    data['track_idx'] = clip[7]
+    data['audio'] = clip[8]
+    return data
 
 
 class FcpXML(object):
@@ -58,6 +68,7 @@ class FcpXML(object):
         self.base_tree = ET.parse(xml_template, parser)
         self.sequence = self.base_tree.find('sequence')
         self.video_node = self.sequence.find('media').find('video')
+        self.audio_node = self.sequence.find('media').find('audio')
         self.timeline_first = self.c.execute(
             'SELECT fir_f FROM tracks ORDER BY fir_f LIMIT 1;').fetchone()[0]
         self.timeline_last = self.c.execute(
@@ -91,24 +102,11 @@ class FcpXML(object):
         """
         track = ET.SubElement(self.video_node, 'track')
 
-        self.c.execute(
-            'SELECT id, track_id, tc_in, duration, fir_f, last_f, fullpath,'
-            'track_idx, audio FROM tracks WHERE track_id=? ORDER BY fir_f;',
-            track_id)
-        clips = self.c.fetchall()
         # TODO use dict to store sql data
+        clips = get_clips(self.c, track_id)
 
         for clip in clips:
-            data = dict()
-            data['id'] = clip[0]
-            data['track_id'] = clip[1]
-            data['tc_in'] = clip[2]
-            data['duration'] = clip[3]
-            data['fir_f'] = clip[4]
-            data['last_f'] = clip[5]
-            data['fullpath'] = clip[6]
-            data['track_idx'] = clip[7]
-            data['audio'] = clip[8]
+            data = get_clip_data(clip)
             self.insert_video_clip(track, data)
 
         node_enabled = ET.Element('enabled')
@@ -130,7 +128,7 @@ class FcpXML(object):
         pathurl = 'file://localhost' + data['fullpath']
         track_idx = data['track_idx']
 
-        clipitem = ET.fromstring(VIDEO_TEMPLATE, parser)
+        clipitem = ET.fromstring(VIDEO_CLIP_TEMPLATE, parser)
         clipitem.attrib['id'] = name + ' '
         clipitem.find('name').text = name
         clipitem.find('duration').text = str(duration)
@@ -156,22 +154,101 @@ class FcpXML(object):
         file_media = clipitem_file.find('media')
         media_video = file_media.find('video')
         media_video.find('duration').text = str(duration)
-        # insert <audio> node if mov has sound
+
+        # insert <audio> node if mov clip has sound
         if data['audio'] != 'N/A':
             audio_node = ET.fromstring(AUDIO_NODE_INSIDE_VIDEO, parser)
             file_media.append(audio_node)
-            links = get_links(name, track_idx)
-            for link in links:
-                clipitem.append(link)
+            # insert 3 link nodes
+            video_link = ET.fromstring(LINK_VIDEO_TEMPLATE, parser)
+            video_link.find('linkclipref').text = name
+            video_link.find('trackindex').text = str(track_idx)
+
+            audio_link1 = ET.fromstring(LINK_AUDIO_TEMPLATE, parser)
+            first_idx = str(track_idx*2 - 1)
+            audio_link1.find('linkclipref').text = name + ' ' + first_idx
+            audio_link1.find('trackindex').text = first_idx
+
+            audio_link2 = ET.fromstring(LINK_AUDIO_TEMPLATE, parser)
+            second_idx = str(track_idx*2)
+            audio_link2.find('linkclipref').text = name + ' ' + second_idx
+            audio_link2.find('trackindex').text = second_idx
+
+            clipitem.append(video_link)
+            clipitem.append(audio_link1)
+            clipitem.append(audio_link2)
+
         track.append(clipitem)
 
+    def insert_audio_track(self, track_id):
+        track = ET.SubElement(self.audio_node, 'track')
+
+        # TODO use dict to store sql data
+        clips = get_clips(self.c, track_id)
+
+        for clip in clips:
+            data = get_clip_data(clip)
+            if data['audio'] != u'N/A':
+                self.insert_audio_clip(track, data)
+
+        node_enabled = ET.Element('enabled')
+        node_enabled.text = 'TRUE'
+        node_locked = ET.Element('locked')
+        node_locked.text = 'FALSE'
+        track.append(node_enabled)
+        track.append(node_locked)
+
     def insert_audio_clip(self, track, data):
-        pass
+        # Cook all the data for inserting
+        id = data['id']
+        filename = os.path.basename(data['fullpath'])
+        name = os.path.splitext(filename)[0]
+        duration = data['duration']
+        start = data['fir_f'] - self.timeline_first
+        end = data['last_f'] - self.timeline_first
+        masterclipid = name + ' ' + str(id)
+        pathurl = 'file://localhost' + data['fullpath']
+        track_idx = data['track_idx']
+
+        clipitem = ET.fromstring(AUDIO_CLIP_TEMPLATE, parser)
+        clipitem.attrib['id'] = name + ' '
+        clipitem.find('name').text = name
+        clipitem.find('duration').text = str(duration)
+        clipitem.find('out').text = str(duration)
+        clipitem.find('start').text = str(start)
+        clipitem.find('end').text = str(end)
+        clipitem.find('masterclipid').text = masterclipid
+        clipitem_file = clipitem.find('file')
+        clipitem_file.attrib['id'] = name + ' 2'
+
+        # insert 3 link nodes
+        video_link = ET.fromstring(LINK_VIDEO_TEMPLATE, parser)
+        video_link.find('linkclipref').text = name
+        video_link.find('trackindex').text = str(track_idx)
+
+        audio_link1 = ET.fromstring(LINK_AUDIO_TEMPLATE, parser)
+        first_idx = str(track_idx*2 - 1)
+        audio_link1.find('linkclipref').text = name + ' ' + first_idx
+        audio_link1.find('trackindex').text = first_idx
+
+        audio_link2 = ET.fromstring(LINK_AUDIO_TEMPLATE, parser)
+        second_idx = str(track_idx*2)
+        audio_link2.find('linkclipref').text = name + ' ' + second_idx
+        audio_link2.find('trackindex').text = second_idx
+
+        clipitem.append(video_link)
+        clipitem.append(audio_link1)
+        clipitem.append(audio_link2)
+        track.append(clipitem)
 
     def create_xml(self):
         tracks = get_tracks(self.c)
-        for track in tracks:
-            self.insert_video_track(track)
+        for track_id in tracks:
+            self.insert_video_track(track_id)
+            # Sound tracks are always paired.
+            self.insert_audio_track(track_id)
+            self.insert_audio_track(track_id)
+
         output_folder = os.path.join(os.environ['HOME'], 'Desktop/melissa')
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)

@@ -56,9 +56,11 @@ def read_clip_meta(clips):
 
 def get_tracks(curser):
         """
-        Get all tracks define by camera id
+        Get all tracks defined by camera id
         :return: all_tracks in list
+                [(u'0301_280_03',), (u'0301_280_03_overlap',), ]
         """
+        # TODO get all tracks defined by track_idx
         sql = 'SELECT DISTINCT TRACK_ID FROM tracks ORDER BY TRACK_ID;'
         curser.execute(sql)
         all_tracks = curser.fetchall()
@@ -153,7 +155,7 @@ class Scanner(object):
                        'WHERE ID = "{id}";'.format(new_track=new_track, id=id))
                 self.c.execute(sql)
         # After update the overlap tracks, get all tracks again to update track
-        # index, TRACK_IDX column in the database
+        # index - the TRACK_IDX column in the database
         tracks = get_tracks(self.c)
         for index, track in enumerate(tracks):
             sql = ('UPDATE TRACKS SET track_idx = {track_idx} WHERE '
@@ -190,8 +192,8 @@ class Scanner(object):
                                 format(fullpath)
 
 if __name__ == '__main__':
-    # path = '/Users/SCENE-01/Desktop/melissa/ep02/01_video/20160312'
-    path = '/git-repos/melissa/input/160303/ep01/01_video/20160301'
+    path = '/Users/SCENE-01/Desktop/melissa/ep02/01_video/20160312'
+    # path = '/git-repos/melissa/input/160303/ep01/01_video/20160301'
     scanner = Scanner()
     scanner.scan(path)
     scanner.rebuild_tracks()
