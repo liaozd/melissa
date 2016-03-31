@@ -75,6 +75,33 @@ AUDIO_CLIP_TEMPLATE = """
 """
 
 # Every lxml instance needs a root
+LINK_TEMPLATE = """
+<fakeroot>
+    <link>
+        <linkclipref>0312_280_d_06_250_0243_01 </linkclipref>
+        <mediatype>video</mediatype>
+        <trackindex>1</trackindex>
+        <clipindex>1</clipindex>
+    </link>
+    <link>
+        <linkclipref>0312_280_d_06_250_0243_01 3</linkclipref>
+        <mediatype>audio</mediatype>
+        <trackindex>1</trackindex>
+        <clipindex>1</clipindex>
+        <groupindex>1</groupindex>
+    </link>
+    <link>
+        <linkclipref>0312_280_d_06_250_0243_01 4</linkclipref>
+        <mediatype>audio</mediatype>
+        <trackindex>1</trackindex>
+        <clipindex>2</clipindex>
+        <groupindex>1</groupindex>
+    </link>
+</fakeroot>
+"""
+
+
+# Every lxml instance needs a root
 LINK_VIDEO_TEMPLATE = """
 <link>
     <linkclipref>[0312_280_d_06_250_0243_01] </linkclipref>

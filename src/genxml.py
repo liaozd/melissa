@@ -12,7 +12,7 @@ from lxml import etree as ET
 
 from config import DB_FILE, FRAMERATE, VIDEO_CLIP_TEMPLATE, \
     AUDIO_NODE_INSIDE_VIDEO, AUDIO_CLIP_TEMPLATE, LINK_VIDEO_TEMPLATE, \
-    LINK_AUDIO_TEMPLATE
+    LINK_AUDIO_TEMPLATE, LINK_TEMPLATE
 from scanner import get_tracks
 
 parser = ET.XMLParser(remove_blank_text=True)
@@ -38,6 +38,21 @@ def get_clips(curser, track_id):
     clips = curser.fetchall()
     # TODO use dict to store sql data
     return clips
+
+
+def get_links(name, track_idx):
+        root = ET.fromstring(LINK_TEMPLATE, parser)
+        # Video link
+        root[0].find('linkclipref').text = name
+        root[0].find('trackindex').text = str(track_idx)
+        # Two audio links
+        first_idx = str(track_idx*2 - 1)
+        root[1].find('linkclipref').text = name + ' ' + first_idx
+        root[1].find('trackindex').text = first_idx
+        second_idx = str(track_idx*2)
+        root[2].find('linkclipref').text = name + ' ' + second_idx
+        root[2].find('trackindex').text = second_idx
+        return root.getchildren()
 
 
 def get_clip_data(clip):
@@ -160,23 +175,9 @@ class FcpXML(object):
             audio_node = ET.fromstring(AUDIO_NODE_INSIDE_VIDEO, parser)
             file_media.append(audio_node)
             # insert 3 link nodes
-            video_link = ET.fromstring(LINK_VIDEO_TEMPLATE, parser)
-            video_link.find('linkclipref').text = name
-            video_link.find('trackindex').text = str(track_idx)
-
-            audio_link1 = ET.fromstring(LINK_AUDIO_TEMPLATE, parser)
-            first_idx = str(track_idx*2 - 1)
-            audio_link1.find('linkclipref').text = name + ' ' + first_idx
-            audio_link1.find('trackindex').text = first_idx
-
-            audio_link2 = ET.fromstring(LINK_AUDIO_TEMPLATE, parser)
-            second_idx = str(track_idx*2)
-            audio_link2.find('linkclipref').text = name + ' ' + second_idx
-            audio_link2.find('trackindex').text = second_idx
-
-            clipitem.append(video_link)
-            clipitem.append(audio_link1)
-            clipitem.append(audio_link2)
+            links = get_links(name, track_idx)
+            for link in links:
+                clipitem.append(link)
 
         track.append(clipitem)
 
@@ -221,24 +222,9 @@ class FcpXML(object):
         clipitem_file = clipitem.find('file')
         clipitem_file.attrib['id'] = name + ' 2'
 
-        # insert 3 link nodes
-        video_link = ET.fromstring(LINK_VIDEO_TEMPLATE, parser)
-        video_link.find('linkclipref').text = name
-        video_link.find('trackindex').text = str(track_idx)
-
-        audio_link1 = ET.fromstring(LINK_AUDIO_TEMPLATE, parser)
-        first_idx = str(track_idx*2 - 1)
-        audio_link1.find('linkclipref').text = name + ' ' + first_idx
-        audio_link1.find('trackindex').text = first_idx
-
-        audio_link2 = ET.fromstring(LINK_AUDIO_TEMPLATE, parser)
-        second_idx = str(track_idx*2)
-        audio_link2.find('linkclipref').text = name + ' ' + second_idx
-        audio_link2.find('trackindex').text = second_idx
-
-        clipitem.append(video_link)
-        clipitem.append(audio_link1)
-        clipitem.append(audio_link2)
+        links = get_links(name, track_idx)
+        for link in links:
+            clipitem.append(link)
         track.append(clipitem)
 
     def create_xml(self):
