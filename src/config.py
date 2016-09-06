@@ -4,7 +4,7 @@ CLIP_FILTER = ['.mov']
 DB_FILE = 'melissa.db'
 FRAMERATE = 25
 
-CLIP_SAMPLE_XML = """
+VIDEO_CLIP_TEMPLATE = """
 <clipitem id="[place holder]0301_280_a_d02_cam20264_01 ">
     <name>[place holder]0301_280_a_d02_cam20264_01</name>
     <duration>[place holder]293</duration>
@@ -46,8 +46,77 @@ CLIP_SAMPLE_XML = """
             </video>
         </media>
     </file>
-    <sourcetrack>
-        <mediatype>video</mediatype>
-    </sourcetrack>
-    <fielddominance>none</fielddominance>
 </clipitem>"""
+
+AUDIO_NODE_INSIDE_VIDEO = """
+<audio>
+    <samplecharacteristics>
+        <samplerate>48000</samplerate>
+        <depth>16</depth>
+    </samplecharacteristics>
+    <channelcount>2</channelcount>
+</audio>"""
+
+AUDIO_CLIP_TEMPLATE = """
+<clipitem id="[0312_280_d_06_250_0243_01] 3">
+    <name>[0312_280_d_06_250_0243_01]</name>
+    <duration>[173]</duration>
+    <rate>
+        <ntsc>FALSE</ntsc>
+        <timebase>25</timebase>
+    </rate>
+    <in>0</in>
+    <out>[173]</out>
+    <start>[13]</start>
+    <end>[186]</end>
+    <masterclipid>[0312_280_d_06_250_0243_01] 1</masterclipid>
+    <file id="[0312_280_d_06_250_0243_01] 2"/>
+</clipitem>
+"""
+
+# Every lxml instance needs a root
+LINK_TEMPLATE = """
+<fakeroot>
+    <link>
+        <linkclipref>0312_280_d_06_250_0243_01 </linkclipref>
+        <mediatype>video</mediatype>
+        <trackindex>1</trackindex>
+        <clipindex>1</clipindex>
+    </link>
+    <link>
+        <linkclipref>0312_280_d_06_250_0243_01 3</linkclipref>
+        <mediatype>audio</mediatype>
+        <trackindex>1</trackindex>
+        <clipindex>1</clipindex>
+        <groupindex>1</groupindex>
+    </link>
+    <link>
+        <linkclipref>0312_280_d_06_250_0243_01 4</linkclipref>
+        <mediatype>audio</mediatype>
+        <trackindex>1</trackindex>
+        <clipindex>2</clipindex>
+        <groupindex>1</groupindex>
+    </link>
+</fakeroot>
+"""
+
+
+# Every lxml instance needs a root
+LINK_VIDEO_TEMPLATE = """
+<link>
+    <linkclipref>[0312_280_d_06_250_0243_01] </linkclipref>
+    <mediatype>video</mediatype>
+    <trackindex>[1]</trackindex>
+    <clipindex>1</clipindex>
+</link>
+"""
+
+LINK_AUDIO_TEMPLATE = """
+<link>
+    <linkclipref>[0312_280_d_06_250_0243_01] 3</linkclipref>
+    <mediatype>audio</mediatype>
+    <trackindex>[1]</trackindex>
+    <clipindex>1</clipindex>
+    <groupindex>1</groupindex>
+</link>
+"""

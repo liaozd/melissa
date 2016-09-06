@@ -2,6 +2,7 @@ lxml==3.5.0
 pluggy==0.3.1
 py==1.4.31
 PyInstaller==3.1.1
+SpeechRecognition==3.3.3
 timecode==0.3.0
 tox==2.3.1
 virtualenv==15.0.2

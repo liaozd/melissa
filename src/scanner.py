@@ -31,6 +31,7 @@ def read_clip_meta(clips):
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
         data = json.loads(proc.communicate()[0])
+        data_needed = dict()
         for stream in data['streams']:
             if stream.get('codec_type') == 'video' and \
                             stream.get('r_frame_rate') == '25/1':
@@ -38,20 +39,28 @@ def read_clip_meta(clips):
                 tc_in = stream['tags'].get('timecode')
                 if not tc_in:
                     tc_in = data['format']['tags']['timecode']
-                data_needed = {'tc_in': tc_in,
-                               'duration': stream['duration'],
-                               'meta': data,
-                               }
-                return data_needed
+                data_needed.update({
+                    'tc_in': tc_in,
+                    'duration': stream['duration'],
+                    'meta': data
+                })
+            elif stream.get('codec_type') == 'audio':
+                data_needed.update({'audio': stream.get('codec_time_base')})
+        if not data_needed.get('audio'):
+            data_needed.update({'audio': 'N/A'})
+        return data_needed
     except Exception:
+        print 'No data extraced from mov file.'
         return None
 
 
 def get_tracks(curser):
         """
-        Get all tracks define by camera id
+        Get all tracks defined by camera id
         :return: all_tracks in list
+                [(u'0301_280_03',), (u'0301_280_03_overlap',), ]
         """
+        # TODO get all tracks defined by track_idx
         sql = 'SELECT DISTINCT TRACK_ID FROM tracks ORDER BY TRACK_ID;'
         curser.execute(sql)
         all_tracks = curser.fetchall()
@@ -70,7 +79,9 @@ class Scanner(object):
     def build_db(self):
         self.c.execute('DROP TABLE IF EXISTS TRACKS;')
         """
-        CAM_ID:
+        CAM_ID: Camera name
+        TRACK_ID: ID for each tracks, to distinguish them from each other
+        TRACK_IDX: Track index for genxml to guild tracks sequentially.
         TC_IN: in point, get from the metadata
         TC_OUT: out point, calculated
         DURATION: duration in the metadata
@@ -79,22 +90,25 @@ class Scanner(object):
                 fcp xml <end>
         META: all metadata
         FULLPATH: file full path on disk
+        AUDIO: save the audio codec time base if file have a audio
         """
         self.c.execute('CREATE TABLE TRACKS'
-                       '(ID      INTEGER  PRIMARY KEY AUTOINCREMENT,'
-                       'CAM_ID   CHAR(100)            NOT NULL,'
-                       'TRACK_ID CHAR(100),'
-                       'TC_IN    CHAR(11)             NOT NULL,'
-                       'TC_OUT   CHAR(11)             NOT NULL,'
-                       'FIR_F    INT                  NOT NULL,'
-                       'LAST_F   INT                  NOT NULL,'
-                       'DURATION INT                  NOT NULL,'
-                       'META     TEXT                 NOT NULL,'
-                       'FULLPATH CHAR(300)            NOT NULL);')
+                       '(ID       INTEGER  PRIMARY KEY AUTOINCREMENT,'
+                       'CAM_ID    CHAR(100)            NOT NULL,'
+                       'TRACK_ID  CHAR(100),'
+                       'TRACK_IDX INT,'
+                       'TC_IN     CHAR(11)             NOT NULL,'
+                       'TC_OUT    CHAR(11)             NOT NULL,'
+                       'FIR_F     INT                  NOT NULL,'
+                       'LAST_F    INT                  NOT NULL,'
+                       'DURATION  INT                  NOT NULL,'
+                       'META      TEXT                 NOT NULL,'
+                       'FULLPATH  CHAR(300)            NOT NULL,'
+                       'AUDIO     CHAR(18));')
         self.conn.commit()
 
     # TODO use dict pass parameters
-    def insert_record(self, cam_id, tc_in, duration, meta, fullpath):
+    def insert_record(self, cam_id, tc_in, duration, meta, fullpath, audio):
         """When initiate, track_id = cam_id, then use rebuild_track() put
         overlap clip into the second track
         """
@@ -103,12 +117,14 @@ class Scanner(object):
         tc_out = Timecode(FRAMERATE, frames=last_f-1)
         track_id = cam_id
         sql = ('INSERT INTO TRACKS (CAM_ID,TRACK_ID,TC_IN,TC_OUT,FIR_F,LAST_F,'
-               'DURATION,META,FULLPATH) '
+               'DURATION,META,FULLPATH, AUDIO) '
                'VALUES ("{CAM_ID}","{TRACK_ID}","{TC_IN}","{TC_OUT}",'
-               '"{FIR_F}","{LAST_F}","{DURATION}","{META}","{FULLPATH}");'.
+               '"{FIR_F}","{LAST_F}","{DURATION}","{META}","{FULLPATH}",'
+               '"{AUDIO}");'.
                format(CAM_ID=cam_id, TRACK_ID=track_id, TC_IN=tc_in,
                       TC_OUT=tc_out, FIR_F=fir_f, LAST_F=last_f,
-                      DURATION=duration, FULLPATH=fullpath, META=meta,))
+                      DURATION=duration, META=meta, FULLPATH=fullpath,
+                      AUDIO=audio))
         self.c.execute(sql)
 
     def rebuild_tracks(self):
@@ -137,8 +153,15 @@ class Scanner(object):
                 id = clip[0]
                 sql = ('UPDATE TRACKS SET track_id = "{new_track}" '
                        'WHERE ID = "{id}";'.format(new_track=new_track, id=id))
-                print sql
                 self.c.execute(sql)
+        # After update the overlap tracks, get all tracks again to update track
+        # index - the TRACK_IDX column in the database
+        tracks = get_tracks(self.c)
+        for index, track in enumerate(tracks):
+            sql = ('UPDATE TRACKS SET track_idx = {track_idx} WHERE '
+                   'track_id = "{track_id}";'.format(track_idx=index+1,
+                                                     track_id=track[0]))
+            self.c.execute(sql)
         self.conn.commit()
 
     def scan(self, path):
@@ -161,14 +184,16 @@ class Scanner(object):
                                                tc_in=data['tc_in'],
                                                duration=frames,
                                                meta=data,
-                                               fullpath=fullpath)
+                                               fullpath=fullpath,
+                                               audio=data['audio'])
                             print 'Insert clip: {0}'.format(fullpath)
                         else:
                             print "Warning!, {0} is not recognizable.".\
                                 format(fullpath)
 
 if __name__ == '__main__':
-    path = '/git-repos/melissa/input/160303/ep01/01_video'
+    path = '/Users/SCENE-01/Desktop/melissa/ep02/01_video/20160312'
+    # path = '/git-repos/melissa/input/160303/ep01/01_video/20160301'
     scanner = Scanner()
     scanner.scan(path)
     scanner.rebuild_tracks()
