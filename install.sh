@@ -7,4 +7,4 @@ sudo easy_install pip
 cd $HOME
 git clone https://github.com/liaozd/melissa
 cd melissa/
-sudo pip install -r requirements.txt -i https://pypi.douban.com/simple/
+sudo pip install -r requirements.txt  --trusted-host pypi.douban.com -i http://pypi.douban.com/simple
