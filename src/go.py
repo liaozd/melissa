@@ -20,6 +20,7 @@ def main(argv):
         path = argv[1]
         scanner = Scanner()
         scanner.scan(path)
+        scanner.rebuild_tracks()
         fcpxml = FcpXML()
         fcpxml.create_xml()
     except getopt.GetoptError, err:

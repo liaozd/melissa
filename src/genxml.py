@@ -11,6 +11,7 @@ from timecode import Timecode
 from lxml import etree as ET
 
 from config import DB_FILE, FRAMERATE, CLIP_SAMPLE_XML
+from scanner import get_tracks
 
 parser = ET.XMLParser(remove_blank_text=True)
 xml_template = os.path.join(os.path.dirname(__file__), 'template.xml')
@@ -23,11 +24,11 @@ def dict_factory(cursor, row):
     return dict
 
 
-def get_columns(c, table='tracks'):
+def get_columns(curser, table='tracks'):
     """ Returns columns of the table in list
     """
-    c.execute('PRAGMA TABLE_INFO({})'.format(table))
-    info = c.fetchall()
+    curser.execute('PRAGMA TABLE_INFO({})'.format(table))
+    info = curser.fetchall()
     columns = []
     for col in info:
         columns.append(col[1])
@@ -59,7 +60,8 @@ class FcpXML(object):
     def update_xml_header(self):
         duration = self.timeline_last - self.timeline_first
         string, frame = self.c.execute(
-            'SELECT tc_in, fir_f FROM tracks ORDER BY fir_f LIMIT 1;').fetchone()
+            'SELECT tc_in, fir_f FROM tracks ORDER BY fir_f LIMIT 1;').\
+            fetchone()
         self.sequence.find('uuid').text = str(uuid.uuid1())
         self.sequence.find('duration').text = str(duration)
         timecode_node = self.sequence.find('timecode')
@@ -67,17 +69,7 @@ class FcpXML(object):
         timecode_node.find('frame').text = str(frame-1)
         # TODO update duration from by db info
 
-    def get_tracks(self):
-        """
-        Get all tracks define by camera id
-        :return: all_tracks in list
-        """
-        sql = 'SELECT DISTINCT CAM_ID FROM tracks ORDER BY CAM_ID;'
-        self.c.execute(sql)
-        all_tracks = self.c.fetchall()
-        return all_tracks
-
-    def insert_track(self, cam_id):
+    def insert_track(self, track_id):
         """
         <track>
             <clipitem id="0301_280_a_d02_cam20264_01 "></clipitem>
@@ -91,17 +83,16 @@ class FcpXML(object):
         track = ET.SubElement(self.video_node, 'track')
 
         self.c.execute(
-            'SELECT id, cam_id, tc_in, duration, fir_f, last_f, fullpath FROM '
-            'tracks WHERE cam_id=? ORDER BY fir_f;',
-            cam_id)
+            'SELECT id, track_id, tc_in, duration, fir_f, last_f, fullpath '
+            'FROM tracks WHERE track_id=? ORDER BY fir_f;',
+            track_id)
         clips = self.c.fetchall()
-
         # TODO use dict to store sql data
 
         for clip in clips:
             data = dict()
             data['id'] = clip[0]
-            data['cam_id'] = clip[1]
+            data['track_id'] = clip[1]
             data['tc_in'] = clip[2]
             data['duration'] = clip[3]
             data['fir_f'] = clip[4]
@@ -153,10 +144,9 @@ class FcpXML(object):
         track.append(clipitem)
 
     def create_xml(self):
-        tracks = self.get_tracks()
+        tracks = get_tracks(self.c)
         for track in tracks:
             self.insert_track(track)
-
         output_folder = os.path.join(os.environ['HOME'], 'Desktop/melissa')
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
