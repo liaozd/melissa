@@ -2,11 +2,11 @@
 import getopt
 import sys
 
-from scanner import Scanner
 from genxml import FcpXML
+from scanner import Scanner
 
 
-def Usage():
+def usage():
     print '''Usage:
 go /path/to/movies/20160318
 '''
@@ -14,7 +14,7 @@ go /path/to/movies/20160318
 
 def main(argv):
     if len(argv) == 1 or len(argv) > 2:
-        Usage()
+        usage()
         sys.exit(2)
     try:
         path = argv[1]
@@ -25,7 +25,7 @@ def main(argv):
         fcpxml.create_xml()
     except getopt.GetoptError, err:
         print str(err)
-        Usage()
+        usage()
         sys.exit(2)
 
 if __name__ == '__main__':

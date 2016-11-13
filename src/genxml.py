@@ -3,17 +3,18 @@
 
 import os
 import sqlite3
+import time
 import uuid
 
-import time
-from timecode import Timecode
-
+from config import AUDIO_CLIP_TEMPLATE
+from config import AUDIO_NODE_INSIDE_VIDEO
+from config import DB_FILE
+from config import FRAMERATE
+from config import LINK_TEMPLATE
+from config import VIDEO_CLIP_TEMPLATE
 from lxml import etree as ET
-
-from config import DB_FILE, FRAMERATE, VIDEO_CLIP_TEMPLATE, \
-    AUDIO_NODE_INSIDE_VIDEO, AUDIO_CLIP_TEMPLATE, LINK_VIDEO_TEMPLATE, \
-    LINK_AUDIO_TEMPLATE, LINK_TEMPLATE
 from scanner import get_tracks
+from timecode import Timecode
 
 parser = ET.XMLParser(remove_blank_text=True)
 xml_template = os.path.join(os.path.dirname(__file__), 'template.xml')
@@ -208,7 +209,6 @@ class FcpXML(object):
         start = data['fir_f'] - self.timeline_first
         end = data['last_f'] - self.timeline_first
         masterclipid = name + ' ' + str(id)
-        pathurl = 'file://localhost' + data['fullpath']
         track_idx = data['track_idx']
 
         clipitem = ET.fromstring(AUDIO_CLIP_TEMPLATE, parser)

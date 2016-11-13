@@ -1,12 +1,9 @@
 #!/usr/bin/env python
 import getopt
 import os
-
-import sys
-
 import re
-
 import subprocess
+import sys
 
 from config import CLIP_FILTER
 
@@ -27,6 +24,7 @@ def create_sub_under(path):
         os.mkdir(sub_folder_fullpath)
     return sub_folder_fullpath
 
+
 def get_tc(filename):
     """
 
@@ -38,16 +36,16 @@ def get_tc(filename):
     timecode = ':'.join(re.findall('..?', m))
     return timecode
 
-class QQScanner(object):
 
+class QQScanner(object):
     def scan(self, path):
         for path, subdirs, files in os.walk(path):
             for file in files:
                 extension = os.path.splitext(file)[1]
                 base_name = os.path.splitext(file)[0]
                 if not file.startswith('.') and \
-                    not base_name.endswith('_with_tc') and \
-                    extension.lower() in CLIP_FILTER:
+                        not base_name.endswith('_with_tc') and \
+                                extension.lower() in CLIP_FILTER:
                     if re.search(REG_QQ_MOV, os.path.splitext(file)[0]):
                         fullpath = os.path.join(path, file)
                         dest_path = create_sub_under(os.path.dirname(fullpath))
@@ -82,6 +80,6 @@ def main(argv):
         Usage()
         sys.exit(2)
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     main(sys.argv)

@@ -7,9 +7,10 @@ import re
 import sqlite3
 import subprocess
 
+from config import CLIP_FILTER
+from config import DB_FILE
+from config import FRAMERATE
 from timecode import Timecode
-
-from config import DB_FILE, FRAMERATE, CLIP_FILTER
 
 REG_CAM_ID = '^(\d{4}_[a-zA-Z0-9]+)(_[a-zA-Z]{1}|_[a-zA-Z]{2,})?(_\d{2})$'
 
