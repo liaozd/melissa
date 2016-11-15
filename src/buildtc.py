@@ -61,7 +61,7 @@ class QQScanner(object):
                             os.path.join(dest_path, output_file_name)
 
 
-def Usage():
+def usage():
     print '''Usage:
 buildtc /path/to/0312_qq_da_c_02/
 '''
@@ -69,7 +69,7 @@ buildtc /path/to/0312_qq_da_c_02/
 
 def main(argv):
     if len(argv) == 1 or len(argv) > 2:
-        Usage()
+        usage()
         sys.exit(2)
     try:
         path = argv[1]
@@ -77,7 +77,7 @@ def main(argv):
         scanner.scan(path)
     except getopt.GetoptError, err:
         print str(err)
-        Usage()
+        usage()
         sys.exit(2)
 
 

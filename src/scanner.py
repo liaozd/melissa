@@ -43,8 +43,7 @@ def read_clip_meta(clips):
                 data_needed.update({
                     'tc_in': tc_in,
                     'duration': stream['duration'],
-                    'meta': data
-                })
+                    'meta': data, })
             elif stream.get('codec_type') == 'audio':
                 data_needed.update({'audio': stream.get('codec_time_base')})
         if not data_needed.get('audio'):
