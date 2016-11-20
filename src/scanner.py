@@ -192,7 +192,7 @@ class Scanner(object):
                                   format(fullpath))
 
 if __name__ == '__main__':
-    path = '/Users/liaozhuodi/Downloads/single_sound_track_problem_201611'
+    path = '/2T/Downloads/my-projects/1102_280_d_05'
     scanner = Scanner()
     scanner.scan(path)
     scanner.rebuild_tracks()
