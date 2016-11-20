@@ -21,14 +21,14 @@ ffmpeg -i [SourcePath] -vcodec copy -acodec copy -timecode 1:23:45:01 [DestPath]
 '''
 
 
-def read_clip_meta(clips):
+def read_clip_meta(clip):
+    """
+    Use command get clip meta:
+    ffprobe -print_format json -show_format -show_streams [SourcePath]
+    """
     try:
-        """
-        Use command get clip meta:
-        ffprobe -print_format json -show_format -show_streams [SourcePath]
-        """
         cmd = ['ffprobe', '-v', 'quiet', '-print_format', 'json',
-               '-show_format', '-show_streams', clips]
+               '-show_format', '-show_streams', clip]
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
         data = json.loads(proc.communicate()[0])
@@ -186,14 +186,13 @@ class Scanner(object):
                                                meta=data,
                                                fullpath=fullpath,
                                                audio=data['audio'])
-                            print 'Insert clip: {0}'.format(fullpath)
+                            print('Insert clip: {0}'.format(fullpath))
                         else:
-                            print "Warning!, {0} is not recognizable.".\
-                                format(fullpath)
+                            print("Warning!, {0} is not recognizable.".
+                                  format(fullpath))
 
 if __name__ == '__main__':
-    path = '/Users/SCENE-01/Desktop/melissa/ep02/01_video/20160312'
-    # path = '/git-repos/melissa/input/160303/ep01/01_video/20160301'
+    path = '/Users/liaozhuodi/Downloads/single_sound_track_problem_201611'
     scanner = Scanner()
     scanner.scan(path)
     scanner.rebuild_tracks()
