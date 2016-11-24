@@ -1,12 +1,17 @@
 from lxml import etree as ET
 
+from scanner import Scanner
+from utils.path import get_normalized_path
+
 
 class XmlReader(object):
     def __init__(self, xml_path=None):
         self.path = xml_path
-        self.clips_in_xml = []
+        self.clips_in_xml = self.get_all_clip_paths()
+        self.common_path = self.get_common_path()
 
     def get_all_clip_paths(self):
+        clips_in_xml = []
         tree = ET.parse(self.path)
         root = tree.getroot()
         media = root.getchildren()[0].find('media')
@@ -16,10 +21,10 @@ class XmlReader(object):
             clipitems = track.findall('clipitem')
             for clipitem in clipitems:
                 clip_path = clipitem.find('file').find('pathurl').text
-                # 'file://localhost/Volumes/1119_280_a_01/1119_280_a_01_923_0001.mov'
                 clip_path = clip_path.split(':')[-1]
-                self.clips_in_xml.append(clip_path)
-        return self.clips_in_xml
+                clip_path = get_normalized_path(clip_path)
+                clips_in_xml.append(clip_path)
+        return clips_in_xml
 
     def get_common_path(self):
         common = []
@@ -36,8 +41,12 @@ class XmlReader(object):
                 common.pop()
         return '/'.join(common) + '/'
 
+
 if __name__ == '__main__':
     xml_path = \
         '/home/neo/MEGA/my-projects/melissa/20161120/1119_am_sync_cy.xml'
     xml = XmlReader(xml_path)
-    xml.get_common_path()
+    print xml.clips_in_xml
+    path_to_scan = get_normalized_path(xml.common_path)
+    scanner = Scanner()
+    scanner.scan(path_to_scan)

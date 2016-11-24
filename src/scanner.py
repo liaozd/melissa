@@ -75,6 +75,7 @@ class Scanner(object):
         self.conn = sqlite3.connect(DB_FILE)
         self.c = self.conn.cursor()
         self.build_db()
+        self.all_clip_paths = []
 
     def build_db(self):
         self.c.execute('DROP TABLE IF EXISTS TRACKS;')
@@ -191,8 +192,22 @@ class Scanner(object):
                             print("Warning!, {0} is not recognizable.".
                                   format(fullpath))
 
+    def scan_all_clips(self, path):
+        """Scan all clip file the `path`"""
+        all_clip_paths = []
+        for path, subdirs, files in os.walk(path):
+            for file in files:
+                extension = os.path.splitext(file)[1]
+                if not file.startswith('.') and \
+                        extension.lower() in CLIP_FILTER:
+                    fullpath = os.path.join(path, file)
+                    all_clip_paths.append(fullpath)
+        self.all_clip_paths = all_clip_paths
+
 if __name__ == '__main__':
-    path = '/2T/Downloads/my-projects/1102_280_d_05'
+    path = '/2T/Downloads/my-projects/1102_280_d_05/'
     scanner = Scanner()
     scanner.scan(path)
     scanner.rebuild_tracks()
+    scanner.scan_all_clips(path)
+    print scanner.all_clip_paths

@@ -3,18 +3,20 @@
 
 import os
 import sqlite3
-import time
 import uuid
+
+from lxml import etree as ET
+from timecode import Timecode
 
 from config import AUDIO_CLIP_TEMPLATE
 from config import AUDIO_NODE_INSIDE_VIDEO
 from config import DB_FILE
 from config import FRAMERATE
 from config import LINK_TEMPLATE
+from config import OUTPUT_FOLDER
 from config import VIDEO_CLIP_TEMPLATE
-from lxml import etree as ET
 from scanner import get_tracks
-from timecode import Timecode
+from utils.path import get_output_file_path
 
 parser = ET.XMLParser(remove_blank_text=True)
 xml_template = os.path.join(os.path.dirname(__file__), 'template.xml')
@@ -234,16 +236,10 @@ class FcpXML(object):
             # Sound tracks are always paired.
             self.insert_audio_track(track_id)
             self.insert_audio_track(track_id)
-
-        output_folder = os.path.join(os.environ['HOME'], 'Desktop/melissa')
-        if not os.path.exists(output_folder):
-            os.makedirs(output_folder)
-        timestr = time.strftime("%Y%m%d")
-        output_name = 'output_' + timestr + '.xml'
-        output = os.path.join(output_folder, output_name)
+        output = get_output_file_path(OUTPUT_FOLDER, filename='output',
+                                      extension='.xml')
         self.base_tree.write(output, pretty_print=True, xml_declaration=True,
                              encoding='UTF-8')
-        print 'Create XML: ', output
 
 
 if __name__ == '__main__':
