@@ -62,9 +62,9 @@ class QQScanner(object):
 
 
 def usage():
-    print '''Usage:
+    print('''Usage:
 buildtc /path/to/0312_qq_da_c_02/
-'''
+''')
 
 
 def main(argv):
