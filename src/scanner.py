@@ -21,14 +21,14 @@ ffmpeg -i [SourcePath] -vcodec copy -acodec copy -timecode 1:23:45:01 [DestPath]
 '''
 
 
-def read_clip_meta(clips):
+def read_clip_meta(clip):
+    """
+    Use command get clip meta:
+    ffprobe -print_format json -show_format -show_streams [SourcePath]
+    """
     try:
-        """
-        Use command get clip meta:
-        ffprobe -print_format json -show_format -show_streams [SourcePath]
-        """
         cmd = ['ffprobe', '-v', 'quiet', '-print_format', 'json',
-               '-show_format', '-show_streams', clips]
+               '-show_format', '-show_streams', clip]
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
         data = json.loads(proc.communicate()[0])
@@ -75,6 +75,7 @@ class Scanner(object):
         self.conn = sqlite3.connect(DB_FILE)
         self.c = self.conn.cursor()
         self.build_db()
+        self.all_clip_paths = []
 
     def build_db(self):
         self.c.execute('DROP TABLE IF EXISTS TRACKS;')
@@ -186,14 +187,27 @@ class Scanner(object):
                                                meta=data,
                                                fullpath=fullpath,
                                                audio=data['audio'])
-                            print 'Insert clip: {0}'.format(fullpath)
+                            print('Insert clip: {0}'.format(fullpath))
                         else:
-                            print "Warning!, {0} is not recognizable.".\
-                                format(fullpath)
+                            print("Warning!, {0} is not recognizable.".
+                                  format(fullpath))
+
+    def scan_all_clips(self, path):
+        """Scan all clip file the `path`"""
+        all_clip_paths = []
+        for path, subdirs, files in os.walk(path):
+            for file in files:
+                extension = os.path.splitext(file)[1]
+                if not file.startswith('.') and \
+                        extension.lower() in CLIP_FILTER:
+                    fullpath = os.path.join(path, file)
+                    all_clip_paths.append(fullpath)
+        self.all_clip_paths = all_clip_paths
 
 if __name__ == '__main__':
-    path = '/Users/SCENE-01/Desktop/melissa/ep02/01_video/20160312'
-    # path = '/git-repos/melissa/input/160303/ep01/01_video/20160301'
+    path = '/2T/Downloads/my-projects/1102_280_d_05/'
     scanner = Scanner()
     scanner.scan(path)
     scanner.rebuild_tracks()
+    scanner.scan_all_clips(path)
+    print scanner.all_clip_paths

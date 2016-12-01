@@ -1,7 +1,9 @@
 #!/usr/bin/env python
+import os
 
 CLIP_FILTER = ['.mov']
 DB_FILE = 'melissa.db'
+OUTPUT_FOLDER = os.path.join(os.environ['HOME'], 'Desktop/melissa')
 FRAMERATE = 25
 
 VIDEO_CLIP_TEMPLATE = """

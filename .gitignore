@@ -6,7 +6,7 @@
 # sqlite.db
 *.db
 output.xml
-
+*.csv
 *.fcp
 
 ### VirtualEnv template
