@@ -87,19 +87,14 @@ class FcpXML(object):
         self.sequence = self.base_tree.find('sequence')
         self.video_node = self.sequence.find('media').find('video')
         self.audio_node = self.sequence.find('media').find('audio')
-        self.timeline_first = self.c.execute(
-            'SELECT fir_f FROM tracks ORDER BY fir_f LIMIT 1;').fetchone()[0]
-        self.timeline_last = self.c.execute(
-            'SELECT last_f FROM tracks ORDER BY last_f DESC LIMIT 1;').\
-            fetchone()[0]
+        self.timeline_first = self.c.execute('SELECT fir_f FROM tracks ORDER BY fir_f LIMIT 1;').fetchone()[0]
+        self.timeline_last = self.c.execute('SELECT last_f FROM tracks ORDER BY last_f DESC LIMIT 1;').fetchone()[0]
         self.columns = get_columns(self.c)
         self.update_xml_header()
 
     def update_xml_header(self):
         duration = self.timeline_last - self.timeline_first
-        string, frame = self.c.execute(
-            'SELECT tc_in, fir_f FROM tracks ORDER BY fir_f LIMIT 1;').\
-            fetchone()
+        string, frame = self.c.execute('SELECT tc_in, fir_f FROM tracks ORDER BY fir_f LIMIT 1;').fetchone()
         self.sequence.find('uuid').text = str(uuid.uuid1())
         self.sequence.find('duration').text = str(duration)
         timecode_node = self.sequence.find('timecode')
@@ -236,10 +231,8 @@ class FcpXML(object):
             # Sound tracks are always paired.
             self.insert_audio_track(track_id)
             self.insert_audio_track(track_id)
-        output = get_output_file_path(OUTPUT_FOLDER, filename='output',
-                                      extension='.xml')
-        self.base_tree.write(output, pretty_print=True, xml_declaration=True,
-                             encoding='UTF-8')
+        output = get_output_file_path(OUTPUT_FOLDER, filename='output', extension='.xml')
+        self.base_tree.write(output, pretty_print=True, xml_declaration=True, encoding='UTF-8')
 
 
 if __name__ == '__main__':
