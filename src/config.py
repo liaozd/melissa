@@ -21,8 +21,7 @@ VIDEO_CLIP_TEMPLATE = """
     <pixelaspectratio>Square</pixelaspectratio>
     <anamorphic>FALSE</anamorphic>
     <alphatype>none</alphatype>
-    <masterclipid>[place holder]0301_280_a_d02_cam20264_01 1</masterclipid>
-    <file id="[place holder]0301_280_a_d02_cam20264_01 2">
+    <file id="[place holder]0301_280_a_d02_cam20264_01 1">
         <name>[place holder]0301_280_a_d02_cam20264_01.mov</name>
         <pathurl>file://localhost/git-repos/melissa/input/160303/ep01/01_video/20160301/280/0301_280_a_003/0301_280_a_d02_cam20264_01.mov</pathurl>
         <rate>
@@ -60,8 +59,8 @@ AUDIO_NODE_INSIDE_VIDEO = """
 </audio>"""
 
 AUDIO_CLIP_TEMPLATE = """
-<clipitem id="[0312_280_d_06_250_0243_01] 3">
-    <name>[0312_280_d_06_250_0243_01]</name>
+<clipitem id="[0301_280_a_d02_cam20264_01] 3">
+    <name>[0301_280_a_d02_cam20264_01]</name>
     <duration>[173]</duration>
     <rate>
         <ntsc>FALSE</ntsc>
@@ -71,8 +70,7 @@ AUDIO_CLIP_TEMPLATE = """
     <out>[173]</out>
     <start>[13]</start>
     <end>[186]</end>
-    <masterclipid>[0312_280_d_06_250_0243_01] 1</masterclipid>
-    <file id="[0312_280_d_06_250_0243_01] 2"/>
+    <file id="[0301_280_a_d02_cam20264_01] 1"/>
 </clipitem>
 """
 
@@ -80,20 +78,20 @@ AUDIO_CLIP_TEMPLATE = """
 LINK_TEMPLATE = """
 <fakeroot>
     <link>
-        <linkclipref>0312_280_d_06_250_0243_01 </linkclipref>
+        <linkclipref>0301_280_a_d02_cam20264_01 </linkclipref>
         <mediatype>video</mediatype>
         <trackindex>1</trackindex>
         <clipindex>1</clipindex>
     </link>
     <link>
-        <linkclipref>0312_280_d_06_250_0243_01 3</linkclipref>
+        <linkclipref>0301_280_a_d02_cam20264_01 2</linkclipref>
         <mediatype>audio</mediatype>
         <trackindex>1</trackindex>
         <clipindex>1</clipindex>
         <groupindex>1</groupindex>
     </link>
     <link>
-        <linkclipref>0312_280_d_06_250_0243_01 4</linkclipref>
+        <linkclipref>0301_280_a_d02_cam20264_01 3</linkclipref>
         <mediatype>audio</mediatype>
         <trackindex>1</trackindex>
         <clipindex>2</clipindex>
@@ -106,7 +104,7 @@ LINK_TEMPLATE = """
 # Every lxml instance needs a root
 LINK_VIDEO_TEMPLATE = """
 <link>
-    <linkclipref>[0312_280_d_06_250_0243_01] </linkclipref>
+    <linkclipref>[0301_280_a_d02_cam20264_01] </linkclipref>
     <mediatype>video</mediatype>
     <trackindex>[1]</trackindex>
     <clipindex>1</clipindex>
@@ -115,7 +113,7 @@ LINK_VIDEO_TEMPLATE = """
 
 LINK_AUDIO_TEMPLATE = """
 <link>
-    <linkclipref>[0312_280_d_06_250_0243_01] 3</linkclipref>
+    <linkclipref>[0301_280_a_d02_cam20264_01] 3</linkclipref>
     <mediatype>audio</mediatype>
     <trackindex>[1]</trackindex>
     <clipindex>1</clipindex>

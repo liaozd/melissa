@@ -4,10 +4,6 @@
 import os
 import sqlite3
 import uuid
-
-from lxml import etree as ET
-from timecode import Timecode
-
 from config import AUDIO_CLIP_TEMPLATE
 from config import AUDIO_NODE_INSIDE_VIDEO
 from config import DB_FILE
@@ -15,6 +11,10 @@ from config import FRAMERATE
 from config import LINK_TEMPLATE
 from config import OUTPUT_FOLDER
 from config import VIDEO_CLIP_TEMPLATE
+
+from lxml import etree as ET
+from timecode import Timecode
+
 from scanner import get_tracks
 from utils.path import get_output_file_path
 
@@ -49,10 +49,10 @@ def get_links(name, track_idx):
         root[0].find('linkclipref').text = name
         root[0].find('trackindex').text = str(track_idx)
         # Two audio links
-        first_idx = str(track_idx*2 - 1)
+        first_idx = str(track_idx + 1)
         root[1].find('linkclipref').text = name + ' ' + first_idx
         root[1].find('trackindex').text = first_idx
-        second_idx = str(track_idx*2)
+        second_idx = str(track_idx + 2)
         root[2].find('linkclipref').text = name + ' ' + second_idx
         root[2].find('trackindex').text = second_idx
         return root.getchildren()
@@ -137,7 +137,6 @@ class FcpXML(object):
         duration = data['duration']
         start = data['fir_f'] - self.timeline_first
         end = data['last_f'] - self.timeline_first
-        masterclipid = name + ' ' + str(id)
         pathurl = 'file://localhost' + data['fullpath']
         track_idx = data['track_idx']
 
@@ -148,7 +147,6 @@ class FcpXML(object):
         clipitem.find('out').text = str(duration)
         clipitem.find('start').text = str(start)
         clipitem.find('end').text = str(end)
-        clipitem.find('masterclipid').text = masterclipid
 
         # <file id=""> node
         clipitem_file = clipitem.find('file')
@@ -205,7 +203,6 @@ class FcpXML(object):
         duration = data['duration']
         start = data['fir_f'] - self.timeline_first
         end = data['last_f'] - self.timeline_first
-        masterclipid = name + ' ' + str(id)
         track_idx = data['track_idx']
 
         clipitem = ET.fromstring(AUDIO_CLIP_TEMPLATE, parser)
@@ -215,7 +212,6 @@ class FcpXML(object):
         clipitem.find('out').text = str(duration)
         clipitem.find('start').text = str(start)
         clipitem.find('end').text = str(end)
-        clipitem.find('masterclipid').text = masterclipid
         clipitem_file = clipitem.find('file')
         clipitem_file.attrib['id'] = name + ' 2'
 
