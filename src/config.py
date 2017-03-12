@@ -47,6 +47,9 @@ VIDEO_CLIP_TEMPLATE = """
             </video>
         </media>
     </file>
+    <sourcetrack>
+        <mediatype>video</mediatype>
+    </sourcetrack>
 </clipitem>"""
 
 AUDIO_NODE_INSIDE_VIDEO = """
@@ -71,6 +74,10 @@ AUDIO_CLIP_TEMPLATE = """
     <start>[13]</start>
     <end>[186]</end>
     <file id="[0301_280_a_d02_cam20264_01] 1"/>
+    <sourcetrack>
+        <mediatype>audio</mediatype>
+        <trackindex>[1 or 2]</trackindex>
+    </sourcetrack>
 </clipitem>
 """
 
@@ -88,14 +95,12 @@ LINK_TEMPLATE = """
         <mediatype>audio</mediatype>
         <trackindex>1</trackindex>
         <clipindex>1</clipindex>
-        <groupindex>1</groupindex>
     </link>
     <link>
         <linkclipref>0301_280_a_d02_cam20264_01 3</linkclipref>
         <mediatype>audio</mediatype>
-        <trackindex>1</trackindex>
-        <clipindex>2</clipindex>
-        <groupindex>1</groupindex>
+        <trackindex>2</trackindex>
+        <clipindex>1</clipindex>
     </link>
 </fakeroot>
 """
@@ -117,6 +122,5 @@ LINK_AUDIO_TEMPLATE = """
     <mediatype>audio</mediatype>
     <trackindex>[1]</trackindex>
     <clipindex>1</clipindex>
-    <groupindex>1</groupindex>
 </link>
 """

@@ -44,18 +44,18 @@ def get_clips(curser, track_id):
 
 
 def get_links(name, track_idx):
-        root = ET.fromstring(LINK_TEMPLATE, parser)
-        # Video link
-        root[0].find('linkclipref').text = name
-        root[0].find('trackindex').text = str(track_idx)
-        # Two audio links
-        first_idx = str(track_idx + 1)
-        root[1].find('linkclipref').text = name + ' ' + first_idx
-        root[1].find('trackindex').text = first_idx
-        second_idx = str(track_idx + 2)
-        root[2].find('linkclipref').text = name + ' ' + second_idx
-        root[2].find('trackindex').text = second_idx
-        return root.getchildren()
+    root = ET.fromstring(LINK_TEMPLATE, parser)
+    # Video link
+    root[0].find('linkclipref').text = name + ' '
+    root[0].find('trackindex').text = '1'
+    # Two audio links
+    first_idx = str(track_idx + 1)
+    root[1].find('linkclipref').text = name + ' ' + first_idx
+    # root[1].find('trackindex').text = '1'
+    second_idx = str(track_idx + 2)
+    root[2].find('linkclipref').text = name + ' ' + second_idx
+    # root[2].find('trackindex').text = '1'
+    return root.getchildren()
 
 
 def get_clip_data(clip):
@@ -150,7 +150,7 @@ class FcpXML(object):
 
         # <file id=""> node
         clipitem_file = clipitem.find('file')
-        clipitem_file.attrib['id'] = name + ' 2'
+        clipitem_file.attrib['id'] = name + ' 1'
         clipitem_file.find('name').text = filename
         clipitem_file.find('pathurl').text = pathurl
         clipitem_file.find('duration').text = str(duration)
@@ -177,7 +177,7 @@ class FcpXML(object):
 
         track.append(clipitem)
 
-    def insert_audio_track(self, track_id):
+    def insert_audio_track(self, track_id, item_index):
         track = ET.SubElement(self.audio_node, 'track')
 
         # TODO use dict to store sql data
@@ -186,7 +186,7 @@ class FcpXML(object):
         for clip in clips:
             data = get_clip_data(clip)
             if data['audio'] != u'N/A':
-                self.insert_audio_clip(track, data)
+                self.insert_audio_clip(track, data, item_index)
 
         node_enabled = ET.Element('enabled')
         node_enabled.text = 'TRUE'
@@ -195,9 +195,8 @@ class FcpXML(object):
         track.append(node_enabled)
         track.append(node_locked)
 
-    def insert_audio_clip(self, track, data):
+    def insert_audio_clip(self, track, data, trackindex):
         # Cook all the data for inserting
-        id = data['id']
         filename = os.path.basename(data['fullpath'])
         name = os.path.splitext(filename)[0]
         duration = data['duration']
@@ -206,27 +205,29 @@ class FcpXML(object):
         track_idx = data['track_idx']
 
         clipitem = ET.fromstring(AUDIO_CLIP_TEMPLATE, parser)
-        clipitem.attrib['id'] = name + ' '
+        clipitem.attrib['id'] = name + ' ' + str(trackindex+1)
         clipitem.find('name').text = name
         clipitem.find('duration').text = str(duration)
         clipitem.find('out').text = str(duration)
         clipitem.find('start').text = str(start)
         clipitem.find('end').text = str(end)
         clipitem_file = clipitem.find('file')
-        clipitem_file.attrib['id'] = name + ' 2'
-
+        clipitem_file.attrib['id'] = name + ' 1'
+        clipitem_sourcetrack = clipitem.find('sourcetrack')
+        clipitem_sourcetrack.find('trackindex').text = str(trackindex)
         links = get_links(name, track_idx)
         for link in links:
             clipitem.append(link)
         track.append(clipitem)
 
     def create_xml(self):
+        """Create Final XML"""
         tracks = get_tracks(self.c)
         for track_id in tracks:
             self.insert_video_track(track_id)
             # Sound tracks are always paired.
-            self.insert_audio_track(track_id)
-            self.insert_audio_track(track_id)
+            self.insert_audio_track(track_id, 1)
+            self.insert_audio_track(track_id, 2)
         output = get_output_file_path(OUTPUT_FOLDER, filename='output', extension='.xml')
         self.base_tree.write(output, pretty_print=True, xml_declaration=True, encoding='UTF-8')
 
