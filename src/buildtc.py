@@ -43,22 +43,16 @@ class QQScanner(object):
             for file in files:
                 extension = os.path.splitext(file)[1]
                 base_name = os.path.splitext(file)[0]
-                if not file.startswith('.') and \
-                        not base_name.endswith('_with_tc') and \
-                                extension.lower() in CLIP_FILTER:
+                if not file.startswith('.') and not base_name.endswith('_with_tc') and extension.lower() in CLIP_FILTER:
                     if re.search(REG_QQ_MOV, os.path.splitext(file)[0]):
                         fullpath = os.path.join(path, file)
                         dest_path = create_sub_under(os.path.dirname(fullpath))
-                        output_file_name = os.path.splitext(file)[0] + \
-                                           '_with_tc' + \
-                                           os.path.splitext(file)[1]
+                        output_file_name = os.path.splitext(file)[0] + '_with_tc' + os.path.splitext(file)[1]
                         tc = get_tc(base_name)
-                        cmd = ['ffmpeg', '-i', fullpath, '-vcodec', 'copy',
-                               '-acodec', 'copy', '-timecode', tc,
+                        cmd = ['ffmpeg', '-i', fullpath, '-vcodec', 'copy', '-acodec', 'copy', '-timecode', tc,
                                os.path.join(dest_path, output_file_name)]
                         subprocess.call(cmd)
-                        print "Create new file with timecode: ", \
-                            os.path.join(dest_path, output_file_name)
+                        print "Create new file with timecode: ", os.path.join(dest_path, output_file_name)
 
 
 def usage():

@@ -34,8 +34,7 @@ def read_clip_meta(clip):
         data = json.loads(proc.communicate()[0])
         data_needed = dict()
         for stream in data['streams']:
-            if stream.get('codec_type') == 'video' and \
-                            stream.get('r_frame_rate') == '25/1':
+            if stream.get('codec_type') == 'video' and stream.get('r_frame_rate') == '25/1':
                 # Some of the stream doesn't has a timecode key
                 tc_in = stream['tags'].get('timecode')
                 if not tc_in:
@@ -160,8 +159,7 @@ class Scanner(object):
         tracks = get_tracks(self.c)
         for index, track in enumerate(tracks):
             sql = ('UPDATE TRACKS SET track_idx = {track_idx} WHERE '
-                   'track_id = "{track_id}";'.format(track_idx=index+1,
-                                                     track_id=track[0]))
+                   'track_id = "{track_id}";'.format(track_idx=index+1, track_id=track[0]))
             self.c.execute(sql)
         self.conn.commit()
 
@@ -175,8 +173,7 @@ class Scanner(object):
                     camera_id = m.group(1) + m.group(2) + m.group(3)
                 for file in files:
                     extension = os.path.splitext(file)[1]
-                    if not file.startswith('.') and \
-                                    extension.lower() in CLIP_FILTER:
+                    if not file.startswith('.') and extension.lower() in CLIP_FILTER:
                         fullpath = os.path.join(path, file)
                         data = read_clip_meta(fullpath)
                         if data:
@@ -189,8 +186,7 @@ class Scanner(object):
                                                audio=data['audio'])
                             print('Insert clip: {0}'.format(fullpath))
                         else:
-                            print("Warning!, {0} is not recognizable.".
-                                  format(fullpath))
+                            print("Warning!, {0} is not recognizable.".format(fullpath))
 
     def scan_all_clips(self, path):
         """Scan all clip file the `path`"""

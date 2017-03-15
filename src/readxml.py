@@ -43,8 +43,7 @@ class XmlReader(object):
 
 
 if __name__ == '__main__':
-    xml_path = \
-        '/home/neo/MEGA/my-projects/melissa/20161120/1119_am_sync_cy.xml'
+    xml_path = '/home/neo/MEGA/my-projects/melissa/20161120/1119_am_sync_cy.xml'
     xml = XmlReader(xml_path)
     print xml.clips_in_xml
     path_to_scan = get_normalized_path(xml.common_path)
