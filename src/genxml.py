@@ -173,7 +173,7 @@ class FcpXML(object):
             audio_node = ET.fromstring(AUDIO_NODE_INSIDE_VIDEO, parser)
             file_media.append(audio_node)
             # insert 3 link nodes
-            links = get_links(name, track_idx)
+            links = get_links(id, name, track_idx)
             for link in links:
                 clipitem.append(link)
 
