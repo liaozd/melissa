@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-
 import os
 import sqlite3
 import uuid
@@ -43,18 +42,21 @@ def get_clips(curser, track_id):
     return clips
 
 
-def get_links(name, track_idx):
+def get_links(id, name, track_idx):
     root = ET.fromstring(LINK_TEMPLATE, parser)
     # Video link
     root[0].find('linkclipref').text = name + ' '
     root[0].find('trackindex').text = '1'
+    root[0].find('clipindex').text = str(id)
+
     # Two audio links
     first_idx = str(track_idx + 1)
     root[1].find('linkclipref').text = name + ' ' + first_idx
-    # root[1].find('trackindex').text = '1'
+    root[1].find('clipindex').text = str(id)
+
     second_idx = str(track_idx + 2)
     root[2].find('linkclipref').text = name + ' ' + second_idx
-    # root[2].find('trackindex').text = '1'
+    root[2].find('clipindex').text = str(id)
     return root.getchildren()
 
 
@@ -215,7 +217,7 @@ class FcpXML(object):
         clipitem_file.attrib['id'] = name + ' 1'
         clipitem_sourcetrack = clipitem.find('sourcetrack')
         clipitem_sourcetrack.find('trackindex').text = str(trackindex)
-        links = get_links(name, track_idx)
+        links = get_links(id, name, track_idx)
         for link in links:
             clipitem.append(link)
         track.append(clipitem)
