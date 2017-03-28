@@ -42,21 +42,21 @@ def get_clips(curser, track_id):
     return clips
 
 
-def get_links(id, name, track_idx):
+def insert_links(clip_idx, name, track_idx):
     root = ET.fromstring(LINK_TEMPLATE, parser)
     # Video link
     root[0].find('linkclipref').text = name + ' '
-    root[0].find('trackindex').text = '1'
-    root[0].find('clipindex').text = str(id)
+    root[0].find('trackindex').text = str(track_idx)
+    root[0].find('clipindex').text = str(clip_idx)
 
     # Two audio links
-    first_idx = str(track_idx + 1)
-    root[1].find('linkclipref').text = name + ' ' + first_idx
-    root[1].find('clipindex').text = str(id)
+    root[1].find('linkclipref').text = name + ' 2'
+    root[1].find('trackindex').text = str(track_idx*2-1)
+    root[1].find('clipindex').text = str(clip_idx)
 
-    second_idx = str(track_idx + 2)
-    root[2].find('linkclipref').text = name + ' ' + second_idx
-    root[2].find('clipindex').text = str(id)
+    root[2].find('linkclipref').text = name + ' 3'
+    root[2].find('trackindex').text = str(track_idx*2)
+    root[2].find('clipindex').text = str(clip_idx)
     return root.getchildren()
 
 
@@ -104,7 +104,7 @@ class FcpXML(object):
         timecode_node.find('frame').text = str(frame-1)
         # TODO update duration from by db info
 
-    def insert_video_track(self, track_id):
+    def insert_video_track(self, track_id, track_idx):
         """
         <track>
             <clipitem id="0301_280_a_d02_cam20264_01 "></clipitem>
@@ -120,9 +120,9 @@ class FcpXML(object):
         # TODO use dict to store sql data
         clips = get_clips(self.c, track_id)
 
-        for clip in clips:
+        for clip_idx, clip in enumerate(clips):
             data = get_clip_data(clip)
-            self.insert_video_clip(track, data)
+            self.insert_video_clip(track, data, clip_idx+1, track_idx)
 
         node_enabled = ET.Element('enabled')
         node_enabled.text = 'TRUE'
@@ -131,9 +131,9 @@ class FcpXML(object):
         track.append(node_enabled)
         track.append(node_locked)
 
-    def insert_video_clip(self, track, data):
+    def insert_video_clip(self, track, data, clip_idx, track_idx):
         # Cook all the data for inserting
-        id = data['id']
+        # id = data['id']
         filename = os.path.basename(data['fullpath'])
         name = os.path.splitext(filename)[0]
         duration = data['duration']
@@ -173,22 +173,22 @@ class FcpXML(object):
             audio_node = ET.fromstring(AUDIO_NODE_INSIDE_VIDEO, parser)
             file_media.append(audio_node)
             # insert 3 link nodes
-            links = get_links(id, name, track_idx)
+            links = insert_links(clip_idx, name, track_idx)
             for link in links:
                 clipitem.append(link)
 
         track.append(clipitem)
 
-    def insert_audio_track(self, track_id, item_index):
+    def insert_audio_track(self, track_id, offset):
         track = ET.SubElement(self.audio_node, 'track')
 
         # TODO use dict to store sql data
         clips = get_clips(self.c, track_id)
 
-        for clip in clips:
+        for clip_idx, clip in enumerate(clips):
             data = get_clip_data(clip)
             if data['audio'] != u'N/A':
-                self.insert_audio_clip(track, data, item_index)
+                self.insert_audio_clip(track, data, offset, clip_idx+1)
 
         node_enabled = ET.Element('enabled')
         node_enabled.text = 'TRUE'
@@ -197,8 +197,9 @@ class FcpXML(object):
         track.append(node_enabled)
         track.append(node_locked)
 
-    def insert_audio_clip(self, track, data, trackindex):
-        # Cook all the data for inserting
+    def insert_audio_clip(self, track, data, offset, clip_idx):
+        """Cook all the data for inserting"""
+        # id = data['id']
         filename = os.path.basename(data['fullpath'])
         name = os.path.splitext(filename)[0]
         duration = data['duration']
@@ -207,7 +208,7 @@ class FcpXML(object):
         track_idx = data['track_idx']
 
         clipitem = ET.fromstring(AUDIO_CLIP_TEMPLATE, parser)
-        clipitem.attrib['id'] = name + ' ' + str(trackindex+1)
+        clipitem.attrib['id'] = name + ' ' + str(offset+2)
         clipitem.find('name').text = name
         clipitem.find('duration').text = str(duration)
         clipitem.find('out').text = str(duration)
@@ -216,8 +217,8 @@ class FcpXML(object):
         clipitem_file = clipitem.find('file')
         clipitem_file.attrib['id'] = name + ' 1'
         clipitem_sourcetrack = clipitem.find('sourcetrack')
-        clipitem_sourcetrack.find('trackindex').text = str(trackindex)
-        links = get_links(id, name, track_idx)
+        clipitem_sourcetrack.find('trackindex').text = str(track_idx)
+        links = insert_links(clip_idx, name, track_idx)
         for link in links:
             clipitem.append(link)
         track.append(clipitem)
@@ -225,11 +226,11 @@ class FcpXML(object):
     def create_xml(self):
         """Create Final XML"""
         tracks = get_tracks(self.c)
-        for track_id in tracks:
-            self.insert_video_track(track_id)
+        for track_idx, track_id in enumerate(tracks):
+            self.insert_video_track(track_id, track_idx+1)
             # Sound tracks are always paired.
+            self.insert_audio_track(track_id, 0)
             self.insert_audio_track(track_id, 1)
-            self.insert_audio_track(track_id, 2)
         output = get_output_file_path(OUTPUT_FOLDER, filename='output', extension='.xml')
         self.base_tree.write(output, pretty_print=True, xml_declaration=True, encoding='UTF-8')
 

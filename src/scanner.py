@@ -54,16 +54,16 @@ def read_clip_meta(clip):
 
 
 def get_tracks(curser):
-        """
-        Get all tracks defined by camera id
-        :return: all_tracks in list
-                [(u'0301_280_03',), (u'0301_280_03_overlap',), ]
-        """
-        # TODO get all tracks defined by track_idx
-        sql = 'SELECT DISTINCT TRACK_ID FROM tracks ORDER BY TRACK_ID;'
-        curser.execute(sql)
-        all_tracks = curser.fetchall()
-        return all_tracks
+    """
+    Get all tracks defined by camera id
+    :return: all_tracks in list
+            [(u'0301_280_03',), (u'0301_280_03_overlap',), ]
+    """
+    # TODO get all tracks defined by track_idx
+    sql = 'SELECT DISTINCT TRACK_ID FROM tracks ORDER BY TRACK_ID;'
+    curser.execute(sql)
+    all_tracks = curser.fetchall()
+    return all_tracks
 
 
 class Scanner(object):
