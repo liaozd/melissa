@@ -199,7 +199,6 @@ class FcpXML(object):
 
     def insert_audio_clip(self, track, data, offset, clip_idx):
         """Cook all the data for inserting"""
-        # id = data['id']
         filename = os.path.basename(data['fullpath'])
         name = os.path.splitext(filename)[0]
         duration = data['duration']
@@ -216,8 +215,9 @@ class FcpXML(object):
         clipitem.find('end').text = str(end)
         clipitem_file = clipitem.find('file')
         clipitem_file.attrib['id'] = name + ' 1'
+        # The `trackindex` inside `sourcetrack` determines the which sound track in file to be put on the timeline
         clipitem_sourcetrack = clipitem.find('sourcetrack')
-        clipitem_sourcetrack.find('trackindex').text = str(track_idx)
+        clipitem_sourcetrack.find('trackindex').text = str(offset+1)
         links = insert_links(clip_idx, name, track_idx)
         for link in links:
             clipitem.append(link)
@@ -228,7 +228,7 @@ class FcpXML(object):
         tracks = get_tracks(self.c)
         for track_idx, track_id in enumerate(tracks):
             self.insert_video_track(track_id, track_idx+1)
-            # Sound tracks are always paired.
+            # Sound tracks are always paired
             self.insert_audio_track(track_id, 0)
             self.insert_audio_track(track_id, 1)
         output = get_output_file_path(OUTPUT_FOLDER, filename='output', extension='.xml')
