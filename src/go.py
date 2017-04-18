@@ -7,9 +7,9 @@ from scanner import Scanner
 
 
 def usage():
-    print '''Usage:
+    print('''Usage:
 go /path/to/movies/20160318
-'''
+''')
 
 
 def main(argv):
@@ -23,8 +23,8 @@ def main(argv):
         scanner.rebuild_tracks()
         fcpxml = FcpXML()
         fcpxml.create_xml()
-    except getopt.GetoptError, err:
-        print str(err)
+    except getopt.GetoptError as err:
+        print(str(err))
         usage()
         sys.exit(2)
 

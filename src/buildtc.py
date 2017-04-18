@@ -20,7 +20,7 @@ def create_sub_under(path):
     sub_folder = os.path.basename(path) + '_TC'
     sub_folder_fullpath = os.path.join(path, sub_folder)
     if not os.path.exists(sub_folder_fullpath):
-        print 'Create Folder: {0}'.format(sub_folder_fullpath)
+        print('Create Folder: {0}'.format(sub_folder_fullpath))
         os.mkdir(sub_folder_fullpath)
     return sub_folder_fullpath
 
@@ -52,7 +52,7 @@ class QQScanner(object):
                         cmd = ['ffmpeg', '-i', fullpath, '-vcodec', 'copy', '-acodec', 'copy', '-timecode', tc,
                                os.path.join(dest_path, output_file_name)]
                         subprocess.call(cmd)
-                        print "Create new file with timecode: ", os.path.join(dest_path, output_file_name)
+                        print("Create new file with timecode: ", os.path.join(dest_path, output_file_name))
 
 
 def usage():
@@ -69,8 +69,8 @@ def main(argv):
         path = argv[1]
         scanner = QQScanner()
         scanner.scan(path)
-    except getopt.GetoptError, err:
-        print str(err)
+    except getopt.GetoptError as err:
+        print(str(err))
         usage()
         sys.exit(2)
 

@@ -27,7 +27,7 @@ def get_clip_in_db_fullpaths(curser):
 
 class TimelineChecker(object):
     def __init__(self):
-        print 'Read database: {0}'.format(DB_FILE)
+        print('Read database: {0}'.format(DB_FILE))
         self.db = DB_FILE
         self.conn = sqlite3.connect(DB_FILE)
         self.c = self.conn.cursor()
@@ -37,7 +37,7 @@ class TimelineChecker(object):
         """Compare clips_in_xml with clip_fullpaths in db, and generate a
         csv report."""
         if len(clips_in_xml) < len(self.clip_db_fullpaths):
-            print "Warning: missing clips in time line."
+            print("Warning: missing clips in time line.")
         output = get_output_file_path(OUTPUT_FOLDER,
                                       filename='timeline_check_report',
                                       extension='.csv')
@@ -67,13 +67,13 @@ def main(argv):
         scanner.rebuild_tracks()
         scanner.scan_all_clips(path_to_scan)
         for path in xml.clips_in_xml:
-            print path
+            print(path)
         checker = TimelineChecker()
         checker.check_missing_clips(
             scanner.all_clip_paths,
             xml.clips_in_xml)
-    except getopt.GetoptError, err:
-        print str(err)
+    except getopt.GetoptError as err:
+        print(str(err))
         usage()
         sys.exit(2)
 

@@ -49,7 +49,7 @@ def read_clip_meta(clip):
             data_needed.update({'audio': 'N/A'})
         return data_needed
     except Exception:
-        print 'No data extraced from mov file.'
+        print('No data extraced from mov file.')
         return None
 
 
@@ -69,7 +69,7 @@ def get_tracks(curser):
 class Scanner(object):
 
     def __init__(self):
-        print 'Initial clip database: {0}'.format(DB_FILE)
+        print('Initial clip database: {0}'.format(DB_FILE))
         self.db = DB_FILE
         self.conn = sqlite3.connect(DB_FILE)
         self.c = self.conn.cursor()
@@ -144,7 +144,7 @@ class Scanner(object):
                     last_clip = all_clips[idx-1]
                     if clip[1] <= last_clip[2]:
                         fullpath = clip[-1]
-                        print "Timecode duplicated:", fullpath
+                        print("Timecode duplicated:", fullpath)
                         overlay_clips.append(clip)
             # Update track_id in database
             for clip in overlay_clips:
@@ -206,4 +206,4 @@ if __name__ == '__main__':
     scanner.scan(path)
     scanner.rebuild_tracks()
     scanner.scan_all_clips(path)
-    print scanner.all_clip_paths
+    print(scanner.all_clip_paths)

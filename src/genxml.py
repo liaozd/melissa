@@ -76,7 +76,7 @@ def get_clip_data(clip):
 
 class FcpXML(object):
     def __init__(self, xml_output='output.xml', xml_template=xml_template):
-        print 'Read database: {0}'.format(DB_FILE)
+        print('Read database: {0}'.format(DB_FILE))
         self.db = DB_FILE
         self.conn = sqlite3.connect(DB_FILE)
         self.c = self.conn.cursor()

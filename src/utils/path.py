@@ -15,5 +15,5 @@ def get_output_file_path(OUTPUT_FOLDER, filename='output', extension='.xml'):
     timestr = time.strftime("%Y%m%d")
     output_name = filename + '_' + timestr + extension
     output = os.path.join(OUTPUT_FOLDER, output_name)
-    print 'Create file: ', output
+    print('Create file: ', output)
     return output
