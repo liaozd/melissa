@@ -1,13 +1,6 @@
-import sys, os
-from PyQt5 import QtCore, QtGui, QtWidgets
+import sys
 
-
-def are_parent_and_child(parent, child):
-    while child.isValid():
-        if child == parent:
-            return True
-        child = child.parent()
-    return False
+from PyQt5 import QtCore, QtWidgets
 
 
 class CheckableDirModel(QtWidgets.QDirModel):
@@ -16,75 +9,49 @@ class CheckableDirModel(QtWidgets.QDirModel):
         self.checks = {}
 
     def data(self, index, role=QtCore.Qt.DisplayRole):
-        if role == QtCore.Qt.CheckStateRole and index.column() == 0:
-            return self.checkState(index)
-        return QtWidgets.QDirModel.data(self, index, role)
+        if role != QtCore.Qt.CheckStateRole:
+            return QtWidgets.QDirModel.data(self, index, role)
+        else:
+            if index.column() == 0:
+                return self.checkState(index)
 
     def flags(self, index):
         return QtWidgets.QDirModel.flags(self, index) | QtCore.Qt.ItemIsUserCheckable
 
     def checkState(self, index):
-        while index.isValid():
-            if index in self.checks:
-                return self.checks[index]
-            index = index.parent()
-        return QtCore.Qt.Unchecked
+        if index in self.checks:
+            return self.checks[index]
+        else:
+            return QtCore.Qt.Unchecked
 
     def setData(self, index, value, role):
         if role == QtCore.Qt.CheckStateRole and index.column() == 0:
-            self.layoutAboutToBeChanged.emit()
-            for i, v in self.checks.items():
-                if are_parent_and_child(index, i):
-                    self.checks.pop(i)
             self.checks[index] = value
-            self.layoutChanged.emit()
+            self.dataChanged.emit(index, index)
             return True
-
         return QtWidgets.QDirModel.setData(self, index, value, role)
 
-    def exportChecked(self, acceptedSuffix=['jpg', 'png', 'bmp']):
-        selection=set()
-        for index in self.checks.keys():
-            if self.checks[index] == QtCore.Qt.Checked:
-                for path, dirs, files in os.walk(self.filePath(index)):
-                    for filename in files:
-                        if QtCore.QFileInfo(filename).completeSuffix().toLower() in acceptedSuffix:
-                            if self.checkState(self.index(os.path.join(path, filename))) == QtCore.Qt.Checked:
-                                try:
-                                    selection.add(os.path.join(path, filename))
-                                except:
-                                    pass
-        return selection
 
+class MainWindows(QtWidgets.QWidget):
 
-# class MainWindows(QtWidgets.QWidget):
-#
-#     def __init__(self, parent=None):
-#         super(MainWindows, self).__init__()
-#         self.init_ui()
-#
-#     def init_ui(self):
-#         self.b = CheckableDirModel()
-#
-#         h_box = QtWidgets.QHBoxLayout()
-#         h_box.addStretch()
-#         h_box.addWidget(self.b)
-#
-#         self.setLayout(h_box)
-#         self.show()
+    def __init__(self, parent=None):
+        super(MainWindows, self).__init__()
 
-app = QtWidgets.QApplication(sys.argv)
+        folder_model = CheckableDirModel()
+        folder_tree_view = QtWidgets.QTreeView()
+        folder_tree_view.setModel(folder_model)
+        folder_tree_view.setAnimated(False)
+        folder_tree_view.setSortingEnabled(True)
 
-model = CheckableDirModel()
-tree = QtWidgets.QTreeView()
-tree.setModel(model)
+        h_box = QtWidgets.QHBoxLayout()
+        h_box.addWidget(folder_tree_view)
+        h_box.addStretch()
 
-tree.setAnimated(False)
-tree.setIndentation(20)
-tree.setSortingEnabled(True)
+        self.setLayout(h_box)
+        self.show()
 
-tree.setWindowTitle("Dir View")
-tree.resize(640, 480)
-tree.show()
+if __name__ == "__main__":
 
-sys.exit(app.exec_())
+    app = QtWidgets.QApplication(sys.argv)
+    window = MainWindows()
+    sys.exit(app.exec_())
