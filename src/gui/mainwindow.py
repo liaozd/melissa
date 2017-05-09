@@ -1,7 +1,11 @@
-import sys, os
+import os
+import sys
 
-from PyQt5 import QtCore, QtWidgets, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtWidgets import QFileDialog
+
+from src.utils.path import get_root_path
 
 CLIP_FILTER = ['mov']
 
@@ -60,11 +64,11 @@ class CheckableDirModel(QtWidgets.QDirModel):
         return False
 
 
-class XmlDragListView(QtWidgets.QListWidget):
+class XmlDragList(QtWidgets.QListWidget):
     dropped = pyqtSignal(list, name="dropped")
 
     def __init__(self, type, parent=None):
-        super(XmlDragListView, self).__init__(parent)
+        super(XmlDragList, self).__init__(parent)
         self.setAcceptDrops(True)
         self.setIconSize(QtCore.QSize(72, 72))
         self.dropped.connect(self.pictureDropped)
@@ -105,11 +109,11 @@ class XmlDragListView(QtWidgets.QListWidget):
                 item.setStatusTip(url)
 
 
-class MainWindows(QtWidgets.QWidget):
+class MainWindows(QtWidgets.QDialog):
     def __init__(self, parent=None):
         super(MainWindows, self).__init__()
 
-        # Folder view on left
+        # folder tree view on the left
         self.folder_model = CheckableDirModel()
         self.folder_view = QtWidgets.QTreeView()
         self.folder_view.setModel(self.folder_model)
@@ -126,25 +130,61 @@ class MainWindows(QtWidgets.QWidget):
         v_folder_box.addWidget(self.folder_view)
         v_folder_box.addWidget(self.scan_button)
 
-        # XML file list view on right
-        self.xml_list_view = XmlDragListView(self)
+        # XML file list view on the right
+        self.xml_list_view = XmlDragList(self)
+        add_xml_button = QtWidgets.QPushButton("&Add XML File")
+        add_xml_button.clicked.connect(self.add_xml)
+        remove_xml_button = QtWidgets.QPushButton("&Remove")
+        remove_xml_button.clicked.connect(self.remove_xml)
+        h_xml_button_box = QtWidgets.QHBoxLayout()
+        h_xml_button_box.addWidget(add_xml_button)
+        h_xml_button_box.addWidget(remove_xml_button)
+
         v_xml_box = QtWidgets.QVBoxLayout()
         v_xml_box.addWidget(self.xml_list_view)
+        v_xml_box.addLayout(h_xml_button_box)
+
         v_xml_box.addStretch()
 
-        # Main box
-        h_box = QtWidgets.QHBoxLayout()
-        h_box.addLayout(v_folder_box)
-        h_box.addLayout(v_xml_box)
-        self.setLayout(h_box)
+        # input box
+        h_input_box = QtWidgets.QHBoxLayout()
+        h_input_box.addLayout(v_folder_box)
+        h_input_box.addLayout(v_xml_box)
+
+        # main box
+        v_main_box = QtWidgets.QVBoxLayout()
+        v_main_box.addLayout(h_input_box)
+        self.result_list_widget = QtWidgets.QListWidget()
+        v_main_box.addWidget(self.result_list_widget)
+        self.setLayout(v_main_box)
         self.show()
 
     def confirm_xml(self):
-        print(self.folder_model.export_checked())
+        movie_files = self.folder_model.export_checked()
+        movie_files_on_timeline = self.load_xml_contents()
 
+    def load_xml_contents(self):
+        xml_files = []
+        for index in range(self.xml_list_view.count()):
+            xml_files.append(self.xml_list_view.item(index))
+        return xml_files
+
+    def add_xml(self):
+        xml_files, _ = QFileDialog.getOpenFileNames(self, "Open File", get_root_path(), "xml Files (*.xml)")
+        if xml_files:
+            for each_file in xml_files:
+                self.xml_list_view.addItem(each_file)
+
+    def remove_xml(self):
+        row = self.xml_list_view.currentRow()
+        item = self.xml_list_view.item(row)
+        if item is None:
+            return
+        item = self.xml_list_view.takeItem(row)
+        del item
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     window = MainWindows()
-    window.resize(800, 600)
+    window.resize(1000, 600)
     sys.exit(app.exec_())
