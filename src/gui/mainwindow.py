@@ -5,6 +5,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QFileDialog
 
+from src.readxml import XmlReader
 from src.utils.path import get_root_path
 
 CLIP_FILTER = ['mov']
@@ -161,13 +162,21 @@ class MainWindows(QtWidgets.QDialog):
 
     def confirm_xml(self):
         movie_files = self.folder_model.export_checked()
-        movie_files_on_timeline = self.load_xml_contents()
+        clips_in_xml = self.load_clips_in_xml()
+        row = self.result_list_widget.currentRow()
+        for _movie_file in movie_files:
+            if _movie_file not in clips_in_xml:
+                self.result_list_widget.insertItem(row, "Missing File: " + _movie_file)
 
-    def load_xml_contents(self):
+    def load_clips_in_xml(self):
         xml_files = []
         for index in range(self.xml_list_view.count()):
-            xml_files.append(self.xml_list_view.item(index))
-        return xml_files
+            xml_files.append(self.xml_list_view.item(index).text())
+        clips_in_xml = []
+        for _xml_file in xml_files:
+            xml = XmlReader(_xml_file)
+            clips_in_xml += xml.clips_in_xml
+        return clips_in_xml
 
     def add_xml(self):
         xml_files, _ = QFileDialog.getOpenFileNames(self, "Open File", get_root_path(), "xml Files (*.xml)")
