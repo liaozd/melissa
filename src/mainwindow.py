@@ -116,7 +116,7 @@ class MainWindows(QtWidgets.QDialog):
 
         # folder tree view on the left
         self.folder_model = CheckableDirModel()
-        self.folder_model.setFilter(QtCore.QDir.AllDirs | QtCore.QDir.NoDotAndDotDot | QtCore.QDir.Hidden)
+        self.folder_model.setFilter(QtCore.QDir.AllEntries | QtCore.QDir.NoDotAndDotDot | QtCore.QDir.Hidden)
         self.folder_view = QtWidgets.QTreeView()
         self.folder_view.setModel(self.folder_model)
         self.folder_view.setAnimated(False)
