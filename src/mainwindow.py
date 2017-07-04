@@ -5,8 +5,8 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QFileDialog
 
-from src.readxml import XmlReader
-from src.utils.path import get_root_path
+from readxml import XmlReader
+from utils.path import get_root_path
 
 CLIP_FILTER = ['mov']
 
