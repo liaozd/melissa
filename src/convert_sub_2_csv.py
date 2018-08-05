@@ -18,7 +18,10 @@ class Sub2CSV(object):
                 fullpath = os.path.join(path, _file)
                 filename, file_extension = os.path.splitext(fullpath)
                 if file_extension.lower() == '.xml':
-                    self.export_dialogs(filename, fullpath)
+                    try:
+                        self.export_dialogs(filename, fullpath)
+                    except Exception as e:
+                        print e
 
     def export_dialogs(self, filename, xml_file_path):
         tree = ET.parse(xml_file_path)
@@ -63,4 +66,5 @@ def main(argv):
 
 
 if __name__ == '__main__':
-    main(sys.argv)
+    xml_path = '/Users/liaozhuodi/Desktop/20180801/'
+    xml = Sub2CSV(xml_path)
