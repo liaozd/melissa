@@ -66,5 +66,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-    xml_path = '/Users/liaozhuodi/Desktop/20180801/'
-    xml = Sub2CSV(xml_path)
+    main(sys.argv)
