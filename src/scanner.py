@@ -200,6 +200,7 @@ class Scanner(object):
                     all_clip_paths.append(fullpath)
         self.all_clip_paths = all_clip_paths
 
+
 if __name__ == '__main__':
     path = '/2T/Downloads/my-projects/1102_280_d_05/'
     scanner = Scanner()
