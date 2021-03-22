@@ -1,4 +1,4 @@
-lxml==3.5.0
+lxml==4.6.3
 pluggy==0.3.1
 py==1.4.31
 timecode==0.3.0
